@@ -1,7 +1,7 @@
 // src/components/task-manager.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import useLocalStorage from '@/hooks/use-local-storage';
 import type { Task } from '@/lib/types';
 import { Button } from '@/components/ui/button';
@@ -14,9 +14,11 @@ interface TaskManagerProps {
   username: string; // Used to key local storage
 }
 
+const EMPTY_TASKS: Task[] = []; // Define a stable reference for initial tasks
+
 export function TaskManager({ username }: TaskManagerProps) {
   const storageKey = `ias-catalyst-tasks-${username}`;
-  const [tasks, setTasks] = useLocalStorage<Task[]>(storageKey, []);
+  const [tasks, setTasks] = useLocalStorage<Task[]>(storageKey, EMPTY_TASKS); // Use stable EMPTY_TASKS
   const [newTaskText, setNewTaskText] = useState('');
   const [isClient, setIsClient] = useState(false);
 
@@ -32,18 +34,20 @@ export function TaskManager({ username }: TaskManagerProps) {
       text: newTaskText,
       completed: false,
     };
-    setTasks([...tasks, newTask]);
+    setTasks(prevTasks => [...prevTasks, newTask]);
     setNewTaskText('');
   };
 
   const toggleTask = (id: string) => {
-    setTasks(tasks.map(task =>
-      task.id === id ? { ...task, completed: !task.completed } : task
-    ));
+    setTasks(prevTasks =>
+      prevTasks.map(task =>
+        task.id === id ? { ...task, completed: !task.completed } : task
+      )
+    );
   };
 
   const deleteTask = (id: string) => {
-    setTasks(tasks.filter(task => task.id !== id));
+    setTasks(prevTasks => prevTasks.filter(task => task.id !== id));
   };
 
   if (!isClient) {
@@ -110,3 +114,4 @@ export function TaskManager({ username }: TaskManagerProps) {
     </Card>
   );
 }
+
