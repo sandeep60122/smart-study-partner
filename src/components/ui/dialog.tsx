@@ -63,8 +63,8 @@ const DialogContent = React.forwardRef<
     <DialogOverlay />
     <DialogPrimitive.Content
       ref={ref}
-       // Apply variants using cn
-      className={cn(dialogContentVariants({ size }), className)}
+       // Apply variants using cn and ADD the custom glass class
+      className={cn(dialogContentVariants({ size }), 'dialog-content-glass', className)}
       {...props}
     >
       {children}

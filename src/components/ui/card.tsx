@@ -9,6 +9,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
+      // Uses .bg-card which is styled in globals.css for glass effect
       "rounded-lg border bg-card text-card-foreground shadow-sm",
       className
     )}
@@ -30,13 +31,14 @@ const CardHeader = React.forwardRef<
 CardHeader.displayName = "CardHeader"
 
 const CardTitle = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  HTMLDivElement, // Changed from HTMLParagraphElement to HTMLDivElement based on typical usage
+  React.HTMLAttributes<HTMLDivElement> // Changed from HTMLHeadingElement
 >(({ className, ...props }, ref) => (
+  // Changed h3 to div, assuming title content might vary; use heading tags inside if needed semantically
   <div
     ref={ref}
     className={cn(
-      "text-2xl font-semibold leading-none tracking-tight",
+      "text-2xl font-semibold leading-none tracking-tight", // Adjusted from text-lg
       className
     )}
     {...props}
@@ -44,11 +46,12 @@ const CardTitle = React.forwardRef<
 ))
 CardTitle.displayName = "CardTitle"
 
+
 const CardDescription = React.forwardRef<
-  HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
+  HTMLParagraphElement, // Changed from HTMLDivElement
+  React.HTMLAttributes<HTMLParagraphElement> // Changed from HTMLDivElement
 >(({ className, ...props }, ref) => (
-  <div
+  <p // Changed div to p for semantic description
     ref={ref}
     className={cn("text-sm text-muted-foreground", className)}
     {...props}
