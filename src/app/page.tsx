@@ -8,9 +8,9 @@ import { Flashcards } from '@/components/flashcards';
 import { TaskManager } from '@/components/task-manager';
 import { Quiz } from '@/components/quiz';
 import { Explanation } from '@/components/explanation';
-import { GamificationDashboard } from '@/components/gamification-dashboard'; // Import Dashboard
+// import { GamificationDashboard } from '@/components/gamification-dashboard'; // Removed Dashboard import
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Layers, ListTodo, HelpCircle, Lightbulb, LayoutDashboard } from 'lucide-react'; // Add Dashboard icon
+import { FileText, Layers, ListTodo, HelpCircle, Lightbulb } from 'lucide-react'; // Removed LayoutDashboard icon
 import { useUserProfile } from '@/contexts/user-profile-context';
 
 export default function Home() {
@@ -49,14 +49,10 @@ export default function Home() {
     setCurrentSummaryHash(generateSummaryHash(summary));
   }, []);
   
-  // Effect to set active tab to dashboard if user is logged in and no summary yet
   useEffect(() => {
     if (currentUser && !currentSummary && activeTab === "summarizer") {
-      // If logged in, but no summary, and on summarizer, maybe default to dashboard?
-      // Or, if profile is loaded and username matches, go to dashboard as first view.
-      if (profile && profile.username === currentUser) {
-        // setActiveTab("dashboard"); // Consider this behavior carefully
-      }
+      // If logged in, but no summary, and on summarizer.
+      // No specific action to take here now that dashboard is removed.
     }
   }, [currentUser, currentSummary, activeTab, profile]);
 
@@ -75,10 +71,7 @@ export default function Home() {
         {currentUser ? (
           <main className="w-full max-w-5xl mb-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-6 mb-6"> {/* Adjusted grid columns */}
-                <TabsTrigger value="dashboard" className="flex items-center gap-2">
-                   <LayoutDashboard className="w-4 h-4" /> Dashboard
-                </TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 mb-6"> {/* Adjusted grid columns to 5 */}
                 <TabsTrigger value="summarizer" className="flex items-center gap-2">
                    <FileText className="w-4 h-4" /> Summarizer
                 </TabsTrigger>
@@ -96,9 +89,7 @@ export default function Home() {
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value="dashboard">
-                <GamificationDashboard />
-              </TabsContent>
+              {/* Removed TabsContent for "dashboard" */}
 
               <TabsContent value="summarizer">
                 <Summarizer onSummaryGenerated={handleSummaryGenerated} />
