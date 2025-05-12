@@ -25,6 +25,7 @@ const EMPTY_QUIZ_RESULTS: QuizResult[] = [];
 export function Quiz({ summary, username }: QuizProps) {
   const storageKey = username ? `ias-catalyst-quiz-results-${username}` : null;
   const [quizResults, setQuizResults] = useLocalStorage<QuizResult[]>(storageKey || '_disabled', EMPTY_QUIZ_RESULTS);
+  const [isClient, setIsClient] = useState(false); // Add isClient state
 
   const [quizTitle, setQuizTitle] = useState<string>('');
   const [quizQuestions, setQuizQuestions] = useState<QuizQuestion[]>([]);
@@ -34,7 +35,7 @@ export function Quiz({ summary, username }: QuizProps) {
   const [score, setScore] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [showHistory, setShowHistory] = useState(false);
+  const [showHistory, setShowHistory] = useState(false); // Default to false, will be set by effect
 
   const { toast } = useToast(); // Initialize toast
 
@@ -52,6 +53,22 @@ export function Quiz({ summary, username }: QuizProps) {
 
   const summaryHash = useMemo(() => generateSummaryHash(summary), [summary]);
 
+  // Effect to check if client-side
+  useEffect(() => {
+    setIsClient(true); // Mark as client-side mounted
+  }, []);
+
+  // Effect to show history by default if results exist on the client
+  useEffect(() => {
+    // Only run on the client after quizResults are potentially loaded/hydrated
+    // Initialize showHistory based on results, but don't force it back to false later
+    if (isClient && quizResults.length > 0 && !showHistory) {
+       // Only set to true initially if results exist and history isn't already shown
+      setShowHistory(true);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isClient, quizResults]); // Re-evaluate when client status or results change
+
 
   const handleGenerateQuiz = async () => {
     if (!summary) {
@@ -68,6 +85,7 @@ export function Quiz({ summary, username }: QuizProps) {
         setQuizTitle(result.quizTitle);
         setQuizQuestions(result.questions);
         setUserAnswers(new Array(result.questions.length).fill(null));
+        setShowHistory(false); // Switch view to the new quiz
       } else {
         setError('The generated quiz has no questions. Please try again.');
       }
@@ -92,7 +110,8 @@ export function Quiz({ summary, username }: QuizProps) {
      setIsQuizComplete(false);
      setScore(0);
      setError(null);
-     setShowHistory(false); // Hide history on reset/new generation
+     // Don't reset showHistory here, allow user to toggle it
+     // setShowHistory(false);
   }
 
   const handleAnswerSelect = (answer: string) => {
@@ -157,16 +176,26 @@ export function Quiz({ summary, username }: QuizProps) {
      setIsQuizComplete(false);
      setScore(0);
      setError(null); // Clear any previous errors
-     setShowHistory(false); // Hide history view
+     setShowHistory(false); // Hide history view, show the quiz questions again
   }
 
   const handleToggleHistory = () => {
      setShowHistory(!showHistory);
+      // If we are toggling history off, and there's an active (but maybe incomplete) quiz,
+      // keep the quiz state. If no active quiz, user will see generate button.
   }
 
-   // Effect to reset quiz when summary changes
+   // Effect to reset quiz content (not history view) when summary changes
   useEffect(() => {
-     resetQuizState();
+      // Only reset the active quiz content, not the history view flag
+      setQuizTitle('');
+      setQuizQuestions([]);
+      setCurrentQuestionIndex(0);
+      setUserAnswers([]);
+      setIsQuizComplete(false);
+      setScore(0);
+      setError(null);
+      // Do not change showHistory here based on summary change.
   }, [summary]);
 
 
@@ -179,6 +208,9 @@ export function Quiz({ summary, username }: QuizProps) {
      return new Date(timestamp).toLocaleString();
    };
 
+   // Determine if history should be shown based on state AND client-side readiness
+   const displayHistory = showHistory && isClient;
+
   return (
     <Card className="w-full max-w-2xl mx-auto mt-6">
       <CardHeader>
@@ -186,23 +218,25 @@ export function Quiz({ summary, username }: QuizProps) {
             <CardTitle className="flex items-center gap-2">
             <HelpCircle className="w-6 h-6" /> Quiz Time!
             </CardTitle>
-            {quizResults.length > 0 && (
+            {/* Only show toggle history button if there are results or if currently showing history */}
+            {(quizResults.length > 0 || showHistory) && isClient && (
                 <Button variant="outline" size="sm" onClick={handleToggleHistory}>
                     <History className="w-4 h-4 mr-2" />
-                    {showHistory ? 'Hide History' : 'View History'}
+                    {showHistory ? 'Take/Generate Quiz' : 'View History'}
                 </Button>
             )}
         </div>
         <CardDescription>
-          {showHistory
-            ? `Viewing past quiz results for ${username}`
-            : quizTitle
+           {displayHistory
+            ? `Viewing past quiz results for ${username}. Toggle off to generate/take a new quiz.`
+            : quizTitle && quizQuestions.length > 0 && !isQuizComplete // Added checks here
               ? `Quiz: ${quizTitle}`
-              : 'Generate a quiz from your summary to test your knowledge.'}
+              : 'Generate a quiz from your summary or view history.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {!showHistory && (
+        {/* Only show generate button when NOT viewing history */}
+        {!displayHistory && (
           <Button
             onClick={handleGenerateQuiz}
             disabled={!canGenerate || isLoading}
@@ -219,7 +253,7 @@ export function Quiz({ summary, username }: QuizProps) {
           </Button>
         )}
 
-        {error && !isLoading && (
+        {error && !isLoading && !displayHistory && ( // Only show error if not in history view
           <Alert variant="destructive">
              <AlertCircle className="h-4 w-4" />
             <AlertTitle>Error</AlertTitle>
@@ -228,11 +262,11 @@ export function Quiz({ summary, username }: QuizProps) {
         )}
 
         {/* Quiz History View */}
-        {showHistory && (
+        {displayHistory && (
             <div className="space-y-4 max-h-96 overflow-y-auto pr-2">
                  <h3 className="text-lg font-semibold border-b pb-2">Quiz History</h3>
                  {quizResults.length === 0 ? (
-                     <p className="text-muted-foreground text-center">No quiz results found.</p>
+                     <p className="text-muted-foreground text-center">No quiz results found for {username}.</p>
                  ) : (
                      quizResults.map((result) => (
                          <Card key={result.id} className="bg-muted/50 p-4">
@@ -248,7 +282,7 @@ export function Quiz({ summary, username }: QuizProps) {
 
 
         {/* Quiz Taking View */}
-        {!showHistory && quizQuestions.length > 0 && !isQuizComplete && currentQuestion && !isLoading && (
+        {!displayHistory && quizQuestions.length > 0 && !isQuizComplete && currentQuestion && !isLoading && (
           <div className="space-y-4">
             <Progress value={((currentQuestionIndex + 1) / quizQuestions.length) * 100} className="w-full h-2" />
             <p className="text-sm text-muted-foreground text-center">Question {currentQuestionIndex + 1} of {quizQuestions.length}</p>
@@ -276,7 +310,7 @@ export function Quiz({ summary, username }: QuizProps) {
         )}
 
         {/* Quiz Results View */}
-        {!showHistory && isQuizComplete && (
+        {!displayHistory && isQuizComplete && (
           <div className="text-center space-y-4 p-6 bg-secondary/50 rounded-lg">
             <h2 className="text-2xl font-bold">Quiz Complete!</h2>
             <p className="text-xl">Your Score: <span className="font-bold text-primary">{score}</span> out of {quizQuestions.length}</p>
@@ -285,6 +319,7 @@ export function Quiz({ summary, username }: QuizProps) {
                 <Button onClick={handleRetakeQuiz} variant="outline">
                     <RotateCcw className="mr-2 h-4 w-4" /> Retake Quiz
                 </Button>
+                 {/* Allow generating a new quiz even after completing one */}
                 <Button onClick={handleGenerateQuiz} disabled={!canGenerate || isLoading}>
                    {isLoading ? 'Generating...' : 'Generate New Quiz'}
                 </Button>
@@ -305,10 +340,11 @@ export function Quiz({ summary, username }: QuizProps) {
           </div>
         )}
 
-         {!showHistory && quizQuestions.length === 0 && !isLoading && summary && !error && (
+         {/* Placeholder text when no quiz/history is active */}
+         {!displayHistory && quizQuestions.length === 0 && !isLoading && !isQuizComplete && summary && !error && (
             <p className="text-muted-foreground text-center py-4">Click "Generate Quiz" to create questions from your summary.</p>
          )}
-         {!showHistory && !summary && !isLoading && (
+         {!displayHistory && quizQuestions.length === 0 && !isLoading && !isQuizComplete && !summary && (
             <p className="text-muted-foreground text-center py-4">Generate a summary first to enable quiz creation.</p>
          )}
 
