@@ -111,8 +111,6 @@
   }
 
   /* Apply glassmorphism effect to elements using card/popover background */
-  /* Note: Tailwind JIT might require these classes to be used somewhere in templates, */
-  /* but applying them here tries to catch the base ShadCN components. */
   .bg-card {
     @apply backdrop-blur-md border border-white/5 shadow-lg; /* Add blur, subtle border, shadow */
     background-color: hsl(var(--card)); /* Ensure explicit bg color with alpha */
@@ -130,6 +128,30 @@
   .bg-sidebar {
     background-color: hsl(var(--sidebar-background)) !important; /* Use variable with alpha */
     @apply backdrop-blur-lg border border-white/5;
+  }
+
+  /* Calendar Day Modifier Styles */
+  .rdp-day_selected, .rdp-day_selected:focus-visible, .rdp-day_selected:hover {
+    background-color: hsl(var(--primary)) !important;
+    color: hsl(var(--primary-foreground)) !important;
+  }
+  .rdp-day_today {
+    font-weight: bold;
+    color: hsl(var(--accent)) !important; /* Make today stand out */
+  }
+  /* Custom modifier for task deadlines */
+  .rdp-day_deadline {
+    /* border: 1px solid hsl(var(--destructive)); */
+    /* Use box-shadow for a less intrusive indicator or a dot */
+  }
+  /* Custom modifier for study sessions */
+  .rdp-day_sessionDay {
+    /* background-color: hsla(var(--primary), 0.1); */
+  }
+  /* If a day is both deadline and session */
+  .rdp-day_deadline.rdp-day_sessionDay {
+    /* background-color: hsla(var(--primary), 0.15);
+    border: 1px solid hsl(var(--destructive)); */
   }
 }
 
