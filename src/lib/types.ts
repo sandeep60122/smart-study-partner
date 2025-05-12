@@ -7,6 +7,10 @@ export interface Flashcard {
 
 export interface Task {
   id: string;
-  text: string;
+  name: string; // Replaces 'text'
+  description?: string; // Optional
+  requiredTime?: number; // In hours, optional
+  deadline?: string; // ISO date string (YYYY-MM-DD), optional
+  priority?: 'Low' | 'Medium' | 'High'; // Optional
   completed: boolean;
 }
