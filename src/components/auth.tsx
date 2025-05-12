@@ -45,52 +45,54 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
 
   if (!isClient) {
      // Render placeholder or null during SSR/hydration phase
-     return <div className="p-4"><Card><CardHeader><CardTitle>Loading User...</CardTitle></CardHeader></Card></div>;
+     // Removed p-4 from wrapper div, Card itself will be sized by content
+     return <Card className="w-full max-w-xs"><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>;
    }
 
 
   return (
-    <div className="p-4">
+    <div> {/* Removed p-4 from here, padding handled by wrapper in page.tsx */}
       {username ? (
-        <Card className="w-full max-w-sm mx-auto">
+        <Card className="w-full max-w-xs"> {/* Reduced max-w, removed mx-auto */}
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Welcome, {username}
+            <CardTitle className="flex items-center gap-2 text-base"> {/* Smaller text for compact view */}
+              <User className="w-4 h-4" /> {/* Slightly smaller icon */}
+              {username}
             </CardTitle>
           </CardHeader>
           <CardFooter>
-            <Button variant="outline" onClick={handleLogout} className="w-full">
-              <LogOut className="mr-2 h-4 w-4" /> Logout
+            <Button variant="outline" onClick={handleLogout} className="w-full text-xs px-2 py-1 h-auto"> {/* Compact button */}
+              <LogOut className="mr-1 h-3 w-3" /> Logout
             </Button>
           </CardFooter>
         </Card>
       ) : (
-        <Card className="w-full max-w-sm mx-auto">
+        <Card className="w-full max-w-xs"> {/* Reduced max-w, removed mx-auto */}
            <CardHeader>
-             <CardTitle>Login</CardTitle>
+             <CardTitle className="text-lg">Login</CardTitle> {/* Slightly smaller title */}
            </CardHeader>
            <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="username">Enter a username</Label>
+            <form onSubmit={handleLogin} className="space-y-3"> {/* Reduced space */}
+              <div className="space-y-1"> {/* Reduced space */}
+                <Label htmlFor="username-auth" className="text-xs">Username</Label> {/* Smaller label */}
                 <Input
-                  id="username"
+                  id="username-auth" // Unique ID for label
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="e.g., aspirant123"
+                  placeholder="aspirant123"
                   required
+                  className="h-8 text-sm" // Compact input
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                 <LogIn className="mr-2 h-4 w-4" /> Login / Register
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-2 py-1 h-auto"> {/* Compact button */}
+                 <LogIn className="mr-1 h-3 w-3" /> Login / Register
               </Button>
             </form>
           </CardContent>
-          <CardFooter>
-            <p className="text-xs text-muted-foreground text-center w-full">
-              No password needed. Your data (tasks) will be stored locally in your browser under this username.
+          <CardFooter className="mt-2"> {/* Added mt-2 to separate from button */}
+            <p className="text-xs text-muted-foreground text-center w-full leading-tight">
+              No password needed. Data is stored locally.
             </p>
           </CardFooter>
         </Card>
