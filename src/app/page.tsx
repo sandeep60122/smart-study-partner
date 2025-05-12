@@ -6,24 +6,30 @@ import { AuthManager } from '@/components/auth';
 import { Summarizer } from '@/components/summarizer';
 import { Flashcards } from '@/components/flashcards';
 import { TaskManager } from '@/components/task-manager';
+import { Quiz } from '@/components/quiz'; // Import the Quiz component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Toaster } from "@/components/ui/toaster"; // Import Toaster
-import { FileText, Layers, ListTodo } from 'lucide-react';
+import { Toaster } from "@/components/ui/toaster";
+import { FileText, Layers, ListTodo, HelpCircle } from 'lucide-react'; // Add HelpCircle icon
 
 export default function Home() {
   const [currentUser, setCurrentUser] = useState<string | null>(null);
   const [currentSummary, setCurrentSummary] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<string>("summarizer"); // Keep track of active tab
+
 
   const handleAuthChange = useCallback((username: string | null) => {
     setCurrentUser(username);
      // Reset summary when user logs out/changes
      if (username === null) {
         setCurrentSummary(null);
+        setActiveTab("summarizer"); // Reset to summarizer tab on logout
      }
   }, []);
 
   const handleSummaryGenerated = useCallback((summary: string) => {
     setCurrentSummary(summary);
+     // Optionally switch to flashcards or quiz tab after summary generation
+     // setActiveTab("flashcards-viewer");
   }, []);
 
   return (
@@ -37,13 +43,17 @@ export default function Home() {
 
       {currentUser ? (
         <main className="w-full max-w-5xl mt-8">
-          <Tabs defaultValue="summarizer" className="w-full">
-            <TabsList className="grid w-full grid-cols-3 mb-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+             {/* Updated grid-cols-4 */}
+            <TabsList className="grid w-full grid-cols-4 mb-6">
               <TabsTrigger value="summarizer" className="flex items-center gap-2">
-                 <FileText className="w-4 h-4" /> Summarizer & Flashcards
+                 <FileText className="w-4 h-4" /> Summarizer
               </TabsTrigger>
               <TabsTrigger value="flashcards-viewer" className="flex items-center gap-2" disabled={!currentSummary}>
-                  <Layers className="w-4 h-4" /> Review Flashcards
+                  <Layers className="w-4 h-4" /> Flashcards
+              </TabsTrigger>
+               <TabsTrigger value="quiz" className="flex items-center gap-2" disabled={!currentSummary}>
+                  <HelpCircle className="w-4 h-4" /> Quiz
               </TabsTrigger>
               <TabsTrigger value="tasks" className="flex items-center gap-2">
                  <ListTodo className="w-4 h-4" /> Task Manager
@@ -52,12 +62,14 @@ export default function Home() {
 
             <TabsContent value="summarizer">
               <Summarizer onSummaryGenerated={handleSummaryGenerated} />
-               {/* Conditionally render Flashcard generation button/section here if preferred */}
             </TabsContent>
 
             <TabsContent value="flashcards-viewer">
-                {/* Flashcards component handles both generation and viewing */}
                <Flashcards summary={currentSummary} />
+             </TabsContent>
+
+             <TabsContent value="quiz">
+                <Quiz summary={currentSummary} username={currentUser} />
              </TabsContent>
 
             <TabsContent value="tasks">
@@ -70,7 +82,7 @@ export default function Home() {
           Please log in with a username to access the tools.
         </div>
       )}
-      <Toaster /> {/* Add Toaster component here */}
+      <Toaster />
     </div>
   );
 }
