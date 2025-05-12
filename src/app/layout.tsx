@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import {Geist, Geist_Mono} from 'next/font/google';
 import './globals.css';
@@ -14,8 +15,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'IAS Catalyst',
+  title: 'Smart Study Partner',
   description: 'Your AI-Powered IAS Exam Preparation Assistant',
+  creator: 'sandeep',
 };
 
 export default function RootLayout({
@@ -32,3 +34,4 @@ export default function RootLayout({
     </html>
   );
 }
+

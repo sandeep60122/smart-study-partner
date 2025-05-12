@@ -32,14 +32,14 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative">
-      
+
       <div className="absolute top-0 right-0 z-50 p-4 md:p-6">
         <AuthManager onAuthChange={handleAuthChange} />
       </div>
 
       <div className="flex flex-col items-center w-full px-4 md:px-8">
         <header className="w-full max-w-5xl text-center py-8 md:py-12">
-           <h1 className="text-4xl font-bold text-primary mb-2">IAS Catalyst</h1>
+           <h1 className="text-4xl font-bold text-primary mb-2">Smart Study Partner</h1> {/* Updated Title */}
            <p className="text-lg text-foreground/80">Your AI-Powered IAS Exam Preparation Assistant</p>
         </header>
 
