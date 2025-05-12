@@ -53,7 +53,8 @@ export function Summarizer({ onSummaryGenerated }: SummarizerProps) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex space-x-2 mb-4">
+        {/* Stack buttons vertically on small screens */}
+        <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2 mb-4">
            <Button
              variant={inputType === 'text' ? 'default': 'outline'}
              onClick={() => setInputType('text')}
@@ -111,7 +112,7 @@ export function Summarizer({ onSummaryGenerated }: SummarizerProps) {
       </CardFooter>
 
        {summary && !isLoading && (
-          <Card className="mt-6 mx-6 mb-6 bg-secondary/50">
+          <Card className="mt-6 mx-4 sm:mx-6 mb-6 bg-secondary/50"> {/* Adjust margin for mobile */}
              <CardHeader>
                <CardTitle>Generated Summary</CardTitle>
              </CardHeader>

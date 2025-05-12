@@ -43,7 +43,7 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
       const newUsername = inputValue.trim();
       setUsername(newUsername);
       // onAuthChange and loadProfile will be called by the useEffect above
-      setInputValue(''); 
+      setInputValue('');
     }
   };
 
@@ -59,12 +59,13 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
   const displayUsername = profile?.username || username;
 
   return (
-    <div> 
+    <div>
       {displayUsername ? (
-        <Card className="w-full max-w-xs"> 
+        // Make card full width on small screens, max-w-xs on larger screens
+        <Card className="w-full sm:max-w-xs">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-base"> 
-              <User className="w-4 h-4" /> 
+            <CardTitle className="flex items-center gap-2 text-base">
+              <User className="w-4 h-4" />
               {displayUsername}
             </CardTitle>
           </CardHeader>
@@ -72,36 +73,37 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
              {profile && <p className="text-xs text-muted-foreground">Points: {profile.points}</p>}
           </CardContent>
           <CardFooter className="pt-2">
-            <Button variant="outline" onClick={handleLogout} className="w-full text-xs px-2 py-1 h-auto"> 
+            <Button variant="outline" onClick={handleLogout} className="w-full text-xs px-2 py-1 h-auto">
               <LogOut className="mr-1 h-3 w-3" /> Logout
             </Button>
           </CardFooter>
         </Card>
       ) : (
-        <Card className="w-full max-w-xs"> 
+        // Make card full width on small screens, max-w-xs on larger screens
+        <Card className="w-full sm:max-w-xs">
            <CardHeader>
-             <CardTitle className="text-lg">Login</CardTitle> 
+             <CardTitle className="text-lg">Login</CardTitle>
            </CardHeader>
            <CardContent>
-            <form onSubmit={handleLogin} className="space-y-3"> 
-              <div className="space-y-1"> 
-                <Label htmlFor="username-auth" className="text-xs">Username</Label> 
+            <form onSubmit={handleLogin} className="space-y-3">
+              <div className="space-y-1">
+                <Label htmlFor="username-auth" className="text-xs">Username</Label>
                 <Input
-                  id="username-auth" 
+                  id="username-auth"
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                   placeholder="aspirant123"
                   required
-                  className="h-8 text-sm" 
+                  className="h-8 text-sm"
                 />
               </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-2 py-1 h-auto"> 
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-2 py-1 h-auto">
                  <LogIn className="mr-1 h-3 w-3" /> Login / Register
               </Button>
             </form>
           </CardContent>
-          <CardFooter className="mt-2"> 
+          <CardFooter className="mt-2">
             <p className="text-xs text-muted-foreground text-center w-full leading-tight">
               No password needed. Data is stored locally.
             </p>

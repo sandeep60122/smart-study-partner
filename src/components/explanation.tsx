@@ -47,15 +47,15 @@ export function Explanation({ summary }: ExplanationProps) {
 
   return (
     <Card className="w-full max-w-2xl mx-auto mt-6">
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Lightbulb className="w-6 h-6" /> AI Explanation (for a 10-year-old)
+      <CardHeader className="p-4 sm:p-6">
+        <CardTitle className="flex items-center gap-2 text-lg sm:text-xl">
+          <Lightbulb className="w-5 h-5 sm:w-6 sm:h-6" /> AI Explanation (for a 10-year-old)
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="text-sm sm:text-base">
           Get a simple, bullet-point explanation of your summary.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent className="space-y-4 p-4 sm:p-6">
          <Button
            onClick={handleGenerateExplanation}
            disabled={!canGenerate || isLoading}
@@ -80,9 +80,9 @@ export function Explanation({ summary }: ExplanationProps) {
         )}
 
         {explanationPoints.length > 0 && !isLoading && (
-          <div className="mt-6 space-y-3 bg-secondary/30 p-4 rounded-lg">
-            <h3 className="text-lg font-semibold text-foreground mb-2">Here's a simple explanation:</h3>
-            <ul className="list-disc list-inside space-y-1 text-foreground/90">
+          <div className="mt-4 sm:mt-6 space-y-2 sm:space-y-3 bg-secondary/30 p-3 sm:p-4 rounded-lg">
+            <h3 className="text-base sm:text-lg font-semibold text-foreground mb-2">Here's a simple explanation:</h3>
+            <ul className="list-disc list-inside space-y-1 text-xs sm:text-sm text-foreground/90">
               {explanationPoints.map((point, index) => (
                 <li key={index} className="ml-2">{point}</li>
               ))}
@@ -91,10 +91,10 @@ export function Explanation({ summary }: ExplanationProps) {
         )}
 
          {explanationPoints.length === 0 && !isLoading && summary && !error && (
-            <p className="text-muted-foreground text-center py-4">Click "Explain This Summary" to get a simple breakdown.</p>
+            <p className="text-muted-foreground text-center py-4 text-sm sm:text-base">Click "Explain This Summary" to get a simple breakdown.</p>
          )}
          {!summary && !isLoading && (
-            <p className="text-muted-foreground text-center py-4">Generate a summary first to enable explanation.</p>
+            <p className="text-muted-foreground text-center py-4 text-sm sm:text-base">Generate a summary first to enable explanation.</p>
          )}
 
       </CardContent>

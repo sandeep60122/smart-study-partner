@@ -48,7 +48,7 @@ export default function Home() {
     setCurrentSummary(summary);
     setCurrentSummaryHash(generateSummaryHash(summary));
   }, []);
-  
+
   useEffect(() => {
     if (currentUser && !currentSummary && activeTab === "summarizer") {
       // If logged in, but no summary, and on summarizer.
@@ -62,30 +62,32 @@ export default function Home() {
         <AuthManager onAuthChange={handleAuthChange} />
       </div>
 
-      <div className="flex flex-col items-center w-full px-4 md:px-8">
+      {/* Adjust padding for mobile */}
+      <div className="flex flex-col items-center w-full px-4 sm:px-6 lg:px-8">
         <header className="w-full max-w-5xl text-center py-8 md:py-12">
-           <h1 className="text-4xl font-bold text-primary mb-2">Smart Study Partner</h1>
-           <p className="text-lg text-foreground/80">Your AI-Powered Assistant - Created by Sandeep</p>
+           <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-2">Smart Study Partner</h1>
+           <p className="text-base sm:text-lg text-foreground/80">Your AI-Powered Assistant - Created by Sandeep</p>
         </header>
 
         {currentUser ? (
           <main className="w-full max-w-5xl mb-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-5 mb-6"> {/* Adjusted grid columns to 5 */}
-                <TabsTrigger value="summarizer" className="flex items-center gap-2">
-                   <FileText className="w-4 h-4" /> Summarizer
+              {/* Responsive grid columns for tabs */}
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 mb-6">
+                <TabsTrigger value="summarizer" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                   <FileText className="w-4 h-4" /> <span className="truncate">Summarizer</span>
                 </TabsTrigger>
-                <TabsTrigger value="explanation" className="flex items-center gap-2" disabled={!currentSummary}>
-                    <Lightbulb className="w-4 h-4" /> Explanation
+                <TabsTrigger value="explanation" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm" disabled={!currentSummary}>
+                    <Lightbulb className="w-4 h-4" /> <span className="truncate">Explanation</span>
                 </TabsTrigger>
-                <TabsTrigger value="flashcards" className="flex items-center gap-2" disabled={!currentSummary}>
-                    <Layers className="w-4 h-4" /> Flashcards
+                <TabsTrigger value="flashcards" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm" disabled={!currentSummary}>
+                    <Layers className="w-4 h-4" /> <span className="truncate">Flashcards</span>
                 </TabsTrigger>
-                 <TabsTrigger value="quiz" className="flex items-center gap-2" disabled={!currentSummary}>
-                    <HelpCircle className="w-4 h-4" /> Quiz
+                 <TabsTrigger value="quiz" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm" disabled={!currentSummary}>
+                    <HelpCircle className="w-4 h-4" /> <span className="truncate">Quiz</span>
                 </TabsTrigger>
-                <TabsTrigger value="tasks" className="flex items-center gap-2">
-                   <ListTodo className="w-4 h-4" /> Task Manager
+                <TabsTrigger value="tasks" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                   <ListTodo className="w-4 h-4" /> <span className="truncate">Tasks</span>
                 </TabsTrigger>
               </TabsList>
 
@@ -113,7 +115,7 @@ export default function Home() {
             </Tabs>
           </main>
         ) : (
-          <div className="w-full max-w-5xl mt-12 md:mt-20 text-center text-muted-foreground py-8">
+          <div className="w-full max-w-5xl mt-12 md:mt-20 text-center text-muted-foreground py-8 px-4">
             Please log in with a username to access the tools.
           </div>
         )}

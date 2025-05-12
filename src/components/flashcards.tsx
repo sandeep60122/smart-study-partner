@@ -26,7 +26,7 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
 
   const [allFlashcards, setAllFlashcards] = useState<Flashcard[]>([]); // All cards for current summary
   const [reviewQueue, setReviewQueue] = useState<Flashcard[]>([]); // Cards currently due for review
-  
+
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -51,7 +51,7 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
     setIsFlipped(false);
     setReviewMode(false); // Default to browsing all cards
     setError(null);
-  }, [storageKey, summary, storedFlashcards]); 
+  }, [storageKey, summary, storedFlashcards]);
   // Adding storedFlashcards to dependency array to react to its updates from useLocalStorage
 
   const updateReviewQueue = useCallback(() => {
@@ -109,7 +109,7 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
         // Remove the just-reviewed card from the current (local) reviewQueue and go to next
         const nextReviewQueue = reviewQueue.filter(c => c.id !== cardToReview.id);
         setReviewQueue(nextReviewQueue); // This will be further filtered by updateReviewQueue effect if needed
-        
+
         if (nextReviewQueue.length > 0) {
             setCurrentCardIndex(0); // Go to the start of the new (shorter) queue
             setIsFlipped(false);
@@ -163,12 +163,12 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
   return (
     <Card className="w-full max-w-2xl mx-auto mt-6">
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
             <CardTitle className="flex items-center gap-2">
             <Layers className="w-6 h-6" /> Flashcards
             </CardTitle>
             {allFlashcards.length > 0 && (
-                <Button onClick={toggleReviewMode} variant="outline" size="sm">
+                <Button onClick={toggleReviewMode} variant="outline" size="sm" className="w-full sm:w-auto">
                     <CalendarClock className="mr-2 h-4 w-4" />
                     {reviewMode ? "Browse All Cards" : `Review Due (${reviewQueue.length})`}
                 </Button>
@@ -189,21 +189,23 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
           <div className="mt-6 space-y-4">
             <div className="text-center text-sm text-muted-foreground mb-2">
               Card {currentCardIndex + 1} of {activeCardList.length}
-              {currentCard.dueDate && <span className="ml-2">(Due: {new Date(currentCard.dueDate).toLocaleDateString()})</span>}
+              {currentCard.dueDate && <span className="ml-2 block sm:inline">(Due: {new Date(currentCard.dueDate).toLocaleDateString()})</span>}
             </div>
-            <div className="relative h-64 perspective" onClick={handleFlipCard} style={{cursor: 'pointer'}}>
+            {/* Adjust height for different screen sizes */}
+            <div className="relative h-56 sm:h-64 perspective" onClick={handleFlipCard} style={{cursor: 'pointer'}}>
               <div className={`relative w-full h-full card-flip ${isFlipped ? 'flipped' : ''}`}>
-                <div className="card-front"><p className="text-lg font-semibold">{currentCard.question}</p></div>
-                <div className="card-back"><p>{currentCard.answer}</p></div>
+                <div className="card-front"><p className="text-base sm:text-lg font-semibold">{currentCard.question}</p></div>
+                <div className="card-back"><p className="text-sm sm:text-base">{currentCard.answer}</p></div>
               </div>
             </div>
 
             {isFlipped && ( // Show SRS controls when card is flipped (showing answer)
-              <div className="flex justify-around items-center pt-4">
-                <Button variant="destructive" onClick={() => handleReviewCard(0)} className="bg-red-600 hover:bg-red-700">
+              // Stack buttons vertically on small screens
+              <div className="flex flex-col sm:flex-row justify-around items-center gap-2 pt-4">
+                <Button variant="destructive" onClick={() => handleReviewCard(0)} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
                   <X className="mr-2 h-4 w-4" /> Incorrect
                 </Button>
-                <Button variant="default" onClick={() => handleReviewCard(2)} className="bg-green-600 hover:bg-green-700">
+                <Button variant="default" onClick={() => handleReviewCard(2)} className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
                   <Check className="mr-2 h-4 w-4" /> Correct
                 </Button>
               </div>

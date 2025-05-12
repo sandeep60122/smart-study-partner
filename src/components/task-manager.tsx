@@ -88,7 +88,7 @@ export function TaskManager({ username }: TaskManagerProps) {
   const handleUpdateTask = (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingTask || newName.trim() === '') return;
-    
+
     const updatedTask: Task = {
         ...editingTask,
         name: newName.trim(),
@@ -135,7 +135,7 @@ export function TaskManager({ username }: TaskManagerProps) {
     }
     checkAndAwardBadgesForTaskCompletion(updatedTasks);
   };
-  
+
   const startEditingTask = (task: Task) => {
     setEditingTask(task);
     setNewName(task.name);
@@ -180,7 +180,7 @@ export function TaskManager({ username }: TaskManagerProps) {
         toast({title: "Missing Information", description: "Please select a task, date, and times.", variant: "destructive"});
         return;
     }
-    
+
     const task = tasks.find(t => t.id === sessionTaskId);
     if (!task) {
         toast({title: "Task Not Found", variant: "destructive"});
@@ -218,7 +218,7 @@ export function TaskManager({ username }: TaskManagerProps) {
     setSessionEndTime('10:00');
     setSessionNotes('');
   };
-  
+
   const deleteStudySession = (sessionId: string) => {
     setStudySessions(prev => prev.filter(s => s.id !== sessionId));
     toast({ title: "Study Session Deleted", variant: "destructive"});
@@ -249,7 +249,7 @@ export function TaskManager({ username }: TaskManagerProps) {
         taskDeadlines[dateStr].sessions.push(session);
         taskDeadlines[dateStr].sessionDay = true; // Mark as a session day
     });
-    
+
     return taskDeadlines;
   }, [tasks, studySessions]);
 
@@ -257,13 +257,13 @@ export function TaskManager({ username }: TaskManagerProps) {
     deadline: { border: '2px solid hsl(var(--destructive))', borderRadius: '50%' },
     sessionDay: { backgroundColor: 'hsla(var(--primary), 0.2)', borderRadius: '8px' },
     // Highlight both if a day has both
-    deadlineAndSessionDay: { 
-        border: '2px solid hsl(var(--destructive))', 
-        backgroundColor: 'hsla(var(--primary), 0.2)', 
-        borderRadius: '8px' 
+    deadlineAndSessionDay: {
+        border: '2px solid hsl(var(--destructive))',
+        backgroundColor: 'hsla(var(--primary), 0.2)',
+        borderRadius: '8px'
     }
   };
-  
+
   const [selectedCalendarDate, setSelectedCalendarDate] = useState<Date | undefined>(new Date());
 
   const tasksForSelectedDate = useMemo(() => {
@@ -288,23 +288,24 @@ export function TaskManager({ username }: TaskManagerProps) {
     <>
       <Card className="w-full max-w-4xl mx-auto">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 text-xl sm:text-2xl">
             <ListTodo className="w-6 h-6" /> Task & Schedule Manager
           </CardTitle>
           <Progress value={taskCompletionPercentage} className="w-full h-2 mt-2" />
-          <CardDescription className="text-sm text-muted-foreground">
+          <CardDescription className="text-xs sm:text-sm text-muted-foreground">
             {tasks.length > 0 ? `${taskCompletionPercentage.toFixed(0)}% of tasks completed.` : "Add tasks to get started."}
           </CardDescription>
         </CardHeader>
-        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Change to single column on mobile, two columns on medium screens+ */}
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 p-4 md:p-6">
           {/* Left Column: Task List & Form */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <Card className="bg-card shadow-sm">
               <CardHeader>
                 <CardTitle className="text-lg">{editingTask ? "Edit Task" : "Add New Task"}</CardTitle>
               </CardHeader>
               <CardContent>
-                <form onSubmit={editingTask ? handleUpdateTask : handleAddTask} className="space-y-4">
+                <form onSubmit={editingTask ? handleUpdateTask : handleAddTask} className="space-y-3">
                   <div>
                     <Label htmlFor="task-name">Task Name</Label>
                     <Input id="task-name" value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="e.g., Read Chapter 5" required />
@@ -313,7 +314,8 @@ export function TaskManager({ username }: TaskManagerProps) {
                     <Label htmlFor="task-description">Description (Optional)</Label>
                     <Textarea id="task-description" value={newDescription} onChange={(e) => setNewDescription(e.target.value)} placeholder="More details..." rows={2}/>
                   </div>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Keep grid layout for priority/deadline */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                     <div>
                       <Label htmlFor="task-priority">Priority</Label>
                       <Select value={newPriority} onValueChange={(v) => setNewPriority(v as 'Low'|'Medium'|'High')}>
@@ -344,7 +346,8 @@ export function TaskManager({ username }: TaskManagerProps) {
                     <Label htmlFor="task-req-time">Est. Time (hrs, Opt.)</Label>
                     <Input id="task-req-time" type="number" value={newRequiredTime} onChange={(e) => setNewRequiredTime(e.target.value)} placeholder="e.g., 2.5" min="0" step="0.1"/>
                   </div>
-                  <div className="flex gap-2">
+                  {/* Stack buttons vertically on small screens */}
+                  <div className="flex flex-col sm:flex-row gap-2">
                     <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
                       {editingTask ? <><Save className="mr-2 h-4 w-4"/>Save Changes</> : <><PlusCircle className="mr-2 h-4 w-4" />Add Task</>}
                     </Button>
@@ -364,22 +367,26 @@ export function TaskManager({ username }: TaskManagerProps) {
               <div className="space-y-3 max-h-96 overflow-y-auto pr-2">
                 {tasks.sort((a,b) => (a.completed ? 1 : -1) - (b.completed ? 1 : -1) || (a.deadline && b.deadline ? parseISO(a.deadline).getTime() - parseISO(b.deadline).getTime() : 0)).map((task) => (
                   <Card key={task.id} className={`p-3 ${task.completed ? 'bg-muted/30' : 'bg-card'}`}>
-                    <div className="flex items-center gap-2">
-                      <Checkbox id={`task-${task.id}`} checked={task.completed} onCheckedChange={() => toggleTask(task.id)} />
-                      <label htmlFor={`task-${task.id}`} className={`flex-grow font-semibold cursor-pointer ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
-                        {task.name}
-                      </label>
-                      {!task.completed && (
-                        <Button variant="ghost" size="icon" onClick={() => startEditingTask(task)} title="Edit Task"><Edit2 className="h-4 w-4"/></Button>
-                      )}
-                      <Button variant="ghost" size="icon" onClick={() => startPomodoroSession(task)} title="Start Pomodoro"><PlayCircle className="h-4 w-4 text-primary"/></Button>
-                      <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} title="Delete Task"><Trash2 className="h-4 w-4 text-destructive"/></Button>
-                    </div>
-                    {task.description && <p className="text-sm text-muted-foreground ml-8">{task.description}</p>}
-                    <div className="flex flex-wrap gap-x-3 gap-y-1 ml-8 mt-1 text-xs text-muted-foreground">
-                      {task.priority && <span>Priority: <span className={`font-medium ${task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-green-600'}`}>{task.priority}</span></span>}
-                      {task.deadline && <span>Deadline: {format(parseISO(task.deadline), 'MMM d, yyyy')}</span>}
-                      {task.requiredTime && <span>Est: {task.requiredTime} hr(s)</span>}
+                    <div className="flex items-start gap-2"> {/* items-start to align checkbox and text */}
+                      <Checkbox id={`task-${task.id}`} checked={task.completed} onCheckedChange={() => toggleTask(task.id)} className="mt-1" /> {/* Align checkbox */}
+                      <div className="flex-grow space-y-1"> {/* Container for text and details */}
+                        <label htmlFor={`task-${task.id}`} className={`font-semibold cursor-pointer ${task.completed ? 'line-through text-muted-foreground' : ''}`}>
+                          {task.name}
+                        </label>
+                         {task.description && <p className="text-xs sm:text-sm text-muted-foreground">{task.description}</p>}
+                         <div className="flex flex-wrap gap-x-2 sm:gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                            {task.priority && <span>Priority: <span className={`font-medium ${task.priority === 'High' ? 'text-red-500' : task.priority === 'Medium' ? 'text-yellow-600' : 'text-green-600'}`}>{task.priority}</span></span>}
+                            {task.deadline && <span>Deadline: {format(parseISO(task.deadline), 'MMM d, yyyy')}</span>}
+                            {task.requiredTime && <span>Est: {task.requiredTime} hr(s)</span>}
+                         </div>
+                      </div>
+                      <div className="flex flex-col sm:flex-row items-center gap-1 sm:gap-0 ml-auto"> {/* Actions column */}
+                        {!task.completed && (
+                           <Button variant="ghost" size="icon" onClick={() => startEditingTask(task)} title="Edit Task" className="h-7 w-7 sm:h-8 sm:w-8"><Edit2 className="h-4 w-4"/></Button>
+                        )}
+                         <Button variant="ghost" size="icon" onClick={() => startPomodoroSession(task)} title="Start Pomodoro" className="h-7 w-7 sm:h-8 sm:w-8"><PlayCircle className="h-4 w-4 text-primary"/></Button>
+                         <Button variant="ghost" size="icon" onClick={() => deleteTask(task.id)} title="Delete Task" className="h-7 w-7 sm:h-8 sm:w-8"><Trash2 className="h-4 w-4 text-destructive"/></Button>
+                      </div>
                     </div>
                   </Card>
                 ))}
@@ -388,15 +395,16 @@ export function TaskManager({ username }: TaskManagerProps) {
           </div>
 
           {/* Right Column: Calendar & Schedule Form */}
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <Card className="bg-card shadow-sm">
                 <CardHeader><CardTitle className="text-lg">Study Calendar</CardTitle></CardHeader>
                 <CardContent className="flex flex-col items-center">
+                {/* Calendar might be large on small screens, consider alternatives or scaling if needed */}
                 <Calendar
                     mode="single"
                     selected={selectedCalendarDate}
                     onSelect={setSelectedCalendarDate}
-                    className="rounded-md border"
+                    className="rounded-md border scale-90 sm:scale-100" // Scale down slightly on mobile
                     modifiers={calendarModifiers}
                     modifiersStyles={calendarModifierStyles}
                     components={{
@@ -415,24 +423,24 @@ export function TaskManager({ username }: TaskManagerProps) {
                     }}
                 />
                 {selectedCalendarDate && (
-                    <div className="mt-4 w-full space-y-2">
-                        <h4 className="font-semibold">On {format(selectedCalendarDate, 'PPP')}:</h4>
+                    <div className="mt-4 w-full space-y-2 px-2 sm:px-0">
+                        <h4 className="font-semibold text-sm sm:text-base">On {format(selectedCalendarDate, 'PPP')}:</h4>
                         {tasksForSelectedDate.length > 0 && (
                             <div>
-                                <p className="text-sm font-medium text-destructive">Deadlines:</p>
-                                <ul className="list-disc list-inside text-sm">
+                                <p className="text-xs sm:text-sm font-medium text-destructive">Deadlines:</p>
+                                <ul className="list-disc list-inside text-xs sm:text-sm">
                                     {tasksForSelectedDate.map(t => <li key={t.id}>{t.name}</li>)}
                                 </ul>
                             </div>
                         )}
                         {sessionsForSelectedDate.length > 0 && (
                             <div>
-                                <p className="text-sm font-medium text-primary">Study Sessions:</p>
+                                <p className="text-xs sm:text-sm font-medium text-primary">Study Sessions:</p>
                                 {sessionsForSelectedDate.map(s => (
                                     <Card key={s.id} className="p-2 my-1 text-xs bg-primary/5">
                                         <div className="flex justify-between items-center">
-                                            <span>{s.taskName} ({format(new Date(s.startTime), 'p')} - {format(new Date(s.endTime), 'p')})</span>
-                                            <Button variant="ghost" size="icon" onClick={() => deleteStudySession(s.id)} className="h-6 w-6"><Trash2 className="h-3 w-3 text-destructive"/></Button>
+                                            <span className="flex-grow mr-1 truncate">{s.taskName} ({format(new Date(s.startTime), 'p')} - {format(new Date(s.endTime), 'p')})</span>
+                                            <Button variant="ghost" size="icon" onClick={() => deleteStudySession(s.id)} className="h-6 w-6 flex-shrink-0"><Trash2 className="h-3 w-3 text-destructive"/></Button>
                                         </div>
                                         {s.notes && <p className="text-muted-foreground text-xs italic mt-0.5">{s.notes}</p>}
                                     </Card>
@@ -440,13 +448,13 @@ export function TaskManager({ username }: TaskManagerProps) {
                             </div>
                         )}
                         {tasksForSelectedDate.length === 0 && sessionsForSelectedDate.length === 0 && (
-                            <p className="text-sm text-muted-foreground">No deadlines or scheduled sessions.</p>
+                            <p className="text-xs sm:text-sm text-muted-foreground">No deadlines or scheduled sessions.</p>
                         )}
                     </div>
                 )}
                 </CardContent>
             </Card>
-            
+
             <Card className="bg-card shadow-sm">
               <CardHeader><CardTitle className="text-lg">Schedule Study Session</CardTitle></CardHeader>
               <CardContent>
@@ -469,10 +477,11 @@ export function TaskManager({ username }: TaskManagerProps) {
                                 {sessionDate ? format(sessionDate, 'PPP') : <span>Pick a date</span>}
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={sessionDate} onSelect={sessionDate} initialFocus /></PopoverContent>
+                        <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={sessionDate} onSelect={setSessionDate} initialFocus /></PopoverContent>
                     </Popover>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  {/* Stack time inputs on small screens */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><Label htmlFor="session-start-time">Start Time</Label><Input id="session-start-time" type="time" value={sessionStartTime} onChange={e => setSessionStartTime(e.target.value)} /></div>
                     <div><Label htmlFor="session-end-time">End Time</Label><Input id="session-end-time" type="time" value={sessionEndTime} onChange={e => setSessionEndTime(e.target.value)} /></div>
                   </div>

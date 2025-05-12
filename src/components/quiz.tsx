@@ -46,10 +46,12 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
   }, []);
 
   useEffect(() => {
-    if (isClient && quizResults.length > 0 && !showHistory) {
-      // setShowHistory(true); // Default to history if results exist - This was the user request
+    if (isClient && quizResults.length > 0 && !showHistory && quizQuestions.length === 0 && !isLoading) {
+       // Only default to history if client loaded, results exist, not already showing history,
+       // no quiz is actively loaded, and not currently loading a quiz.
+      setShowHistory(true);
     }
-  }, [isClient, quizResults, showHistory]);
+  }, [isClient, quizResults, showHistory, quizQuestions, isLoading]);
 
 
   const handleGenerateQuiz = async () => {
@@ -120,7 +122,7 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
 
     setScore(finalScore);
     setIsQuizComplete(true);
-    
+
     // Award points: 1 point per correct answer
     addPoints(finalScore);
 
@@ -158,7 +160,15 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
   }
 
   useEffect(() => {
-      resetQuizState(!showHistory); // Reset if summary changes, keep history view if it's already active
+      // Reset quiz state if summary changes, BUT don't hide history if user is actively viewing it
+      if (!showHistory) {
+          resetQuizState(false);
+      } else {
+          // If history is shown, just clear potential errors from previous generation attempts
+          setError(null);
+          // Maybe clear quiz questions too if history is toggled while a quiz is loaded?
+          // setQuizQuestions([]); // Uncomment if desired
+      }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [summary]);
 
@@ -172,12 +182,12 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
   return (
     <Card className="w-full max-w-2xl mx-auto mt-6">
       <CardHeader>
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4">
             <CardTitle className="flex items-center gap-2">
             <HelpCircle className="w-6 h-6" /> Quiz Time!
             </CardTitle>
             {(quizResults.length > 0 || showHistory) && isClient && (
-                <Button variant="outline" size="sm" onClick={handleToggleHistory}>
+                <Button variant="outline" size="sm" onClick={handleToggleHistory} className="w-full sm:w-auto">
                     <History className="w-4 h-4 mr-2" />
                     {showHistory ? 'Take/Generate Quiz' : 'View History'}
                 </Button>
@@ -209,10 +219,10 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
                      <p className="text-muted-foreground text-center">No quiz results found.</p>
                  ) : (
                      quizResults.map((result) => (
-                         <Card key={result.id} className="bg-muted/50 p-4">
-                             <p className="font-medium">{result.quizTitle}</p>
-                             <p className="text-sm text-muted-foreground">Taken: {formatDate(result.timestamp)}</p>
-                             <p className="text-sm">Score: {result.score}/{result.totalQuestions} ({result.percentage}%)</p>
+                         <Card key={result.id} className="bg-muted/50 p-3 sm:p-4">
+                             <p className="font-medium text-sm sm:text-base">{result.quizTitle}</p>
+                             <p className="text-xs sm:text-sm text-muted-foreground">Taken: {formatDate(result.timestamp)}</p>
+                             <p className="text-xs sm:text-sm">Score: {result.score}/{result.totalQuestions} ({result.percentage}%)</p>
                          </Card>
                      ))
                  )}
@@ -224,12 +234,12 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
             <Progress value={((currentQuestionIndex + 1) / quizQuestions.length) * 100} className="w-full h-2" />
             <p className="text-sm text-muted-foreground text-center">Question {currentQuestionIndex + 1} of {quizQuestions.length}</p>
             <Card className="p-4 bg-card">
-                <p className="font-semibold text-lg mb-4">{currentQuestion.question}</p>
+                <p className="font-semibold text-base sm:text-lg mb-4">{currentQuestion.question}</p>
                 <RadioGroup value={userAnswers[currentQuestionIndex] ?? undefined} onValueChange={handleAnswerSelect} className="space-y-2">
                     {currentQuestion.options.map((option, index) => (
                     <div key={index} className="flex items-center space-x-2 p-2 rounded border border-transparent hover:border-primary/50 has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10 transition-colors">
                         <RadioGroupItem value={option} id={`q${currentQuestionIndex}-o${index}`} />
-                        <Label htmlFor={`q${currentQuestionIndex}-o${index}`} className="flex-1 cursor-pointer">{option}</Label>
+                        <Label htmlFor={`q${currentQuestionIndex}-o${index}`} className="flex-1 cursor-pointer text-sm sm:text-base">{option}</Label>
                     </div>
                     ))}
                 </RadioGroup>
@@ -243,22 +253,23 @@ export function Quiz({ summary, username, summaryHash }: QuizProps) {
         )}
 
         {!displayHistory && isQuizComplete && (
-          <div className="text-center space-y-4 p-6 bg-secondary/50 rounded-lg">
-            <h2 className="text-2xl font-bold">Quiz Complete!</h2>
-            <p className="text-xl">Your Score: <span className="font-bold text-primary">{score}</span> out of {quizQuestions.length}</p>
-            <p className="text-3xl font-bold text-accent">{((score / quizQuestions.length) * 100).toFixed(0)}%</p>
-            <div className="flex justify-center gap-4 pt-4">
-                <Button onClick={handleRetakeQuiz} variant="outline"><RotateCcw className="mr-2 h-4 w-4" /> Retake Quiz</Button>
-                <Button onClick={handleGenerateQuiz} disabled={!canGenerate || isLoading}>{isLoading ? 'Generating...' : 'Generate New Quiz'}</Button>
+          <div className="text-center space-y-4 p-4 sm:p-6 bg-secondary/50 rounded-lg">
+            <h2 className="text-xl sm:text-2xl font-bold">Quiz Complete!</h2>
+            <p className="text-lg sm:text-xl">Your Score: <span className="font-bold text-primary">{score}</span> out of {quizQuestions.length}</p>
+            <p className="text-2xl sm:text-3xl font-bold text-accent">{((score / quizQuestions.length) * 100).toFixed(0)}%</p>
+            {/* Stack buttons vertically on small screens */}
+            <div className="flex flex-col sm:flex-row justify-center gap-2 sm:gap-4 pt-4">
+                <Button onClick={handleRetakeQuiz} variant="outline" className="w-full sm:w-auto"><RotateCcw className="mr-2 h-4 w-4" /> Retake Quiz</Button>
+                <Button onClick={handleGenerateQuiz} disabled={!canGenerate || isLoading} className="w-full sm:w-auto">{isLoading ? 'Generating...' : 'Generate New Quiz'}</Button>
              </div>
             <div className="mt-6 text-left max-h-60 overflow-y-auto space-y-3 pr-2">
                  <h3 className="text-lg font-semibold border-b pb-1 mb-2">Review Answers</h3>
                  {quizQuestions.map((q, index) => (
-                    <div key={index} className={`p-2 border rounded ${userAnswers[index] === q.correctAnswer ? 'border-green-500/50 bg-green-500/10' : 'border-red-500/50 bg-red-500/10'}`}>
+                    <div key={index} className={`p-2 border rounded text-xs sm:text-sm ${userAnswers[index] === q.correctAnswer ? 'border-green-500/50 bg-green-500/10' : 'border-red-500/50 bg-red-500/10'}`}>
                         <p className="font-medium">{index + 1}. {q.question}</p>
-                        <p className="text-sm">Your answer: <span className="font-semibold">{userAnswers[index] ?? 'Not answered'}</span></p>
+                        <p className="mt-1">Your answer: <span className="font-semibold">{userAnswers[index] ?? 'Not answered'}</span></p>
                          {userAnswers[index] !== q.correctAnswer && (
-                            <p className="text-sm text-green-700 dark:text-green-400">Correct answer: <span className="font-semibold">{q.correctAnswer}</span></p>
+                            <p className="mt-1 text-green-700 dark:text-green-400">Correct answer: <span className="font-semibold">{q.correctAnswer}</span></p>
                          )}
                     </div>
                  ))}

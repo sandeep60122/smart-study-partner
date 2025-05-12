@@ -140,9 +140,9 @@ export function PomodoroTimer() {
 
    const getModeIcon = () => {
       switch (mode) {
-          case 'Work': return <Brain className="w-5 h-5 mr-2 text-primary" />;
+          case 'Work': return <Brain className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-primary" />;
           case 'ShortBreak':
-          case 'LongBreak': return <Coffee className="w-5 h-5 mr-2 text-green-600" />;
+          case 'LongBreak': return <Coffee className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-green-600" />;
           default: return null;
       }
    }
@@ -152,31 +152,34 @@ export function PomodoroTimer() {
    }
 
   return (
-     <Card className={`w-full max-w-md text-center shadow-lg ${getModeStyles()}`}>
-        <CardHeader>
-          <CardTitle className="flex items-center justify-center text-xl font-semibold">
+     // Adjust padding and max-width for mobile
+     <Card className={`w-full max-w-sm sm:max-w-md text-center shadow-lg ${getModeStyles()} p-2 sm:p-0`}>
+        <CardHeader className="p-2 sm:p-6">
+          <CardTitle className="flex items-center justify-center text-base sm:text-xl font-semibold">
               {getModeIcon()}
-              Pomodoro Timer: {mode}
+              Pomodoro: {mode}
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-6">
-            <div className="text-6xl font-bold font-mono text-foreground tabular-nums">
+        <CardContent className="space-y-4 sm:space-y-6 p-2 sm:p-6 pt-0">
+             {/* Adjust font size for mobile */}
+            <div className="text-5xl sm:text-6xl font-bold font-mono text-foreground tabular-nums">
                {formatTime(timeLeft)}
             </div>
-            <Progress value={progress} className="w-full h-3" />
-            <div className="flex justify-center gap-4">
-                <Button onClick={handleStartPause} size="lg" variant={status === 'Running' ? "secondary" : "default"} className="min-w-[120px]">
+            <Progress value={progress} className="w-full h-2 sm:h-3" />
+            {/* Adjust button size and gap for mobile */}
+            <div className="flex justify-center gap-2 sm:gap-4">
+                <Button onClick={handleStartPause} size="lg" variant={status === 'Running' ? "secondary" : "default"} className="min-w-[90px] sm:min-w-[120px]">
                 {status === 'Running' ? (
-                    <> <Pause className="mr-2 h-5 w-5" /> Pause </>
+                    <> <Pause className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Pause </>
                 ) : (
-                    <> <Play className="mr-2 h-5 w-5" /> Start </>
+                    <> <Play className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Start </>
                 )}
                 </Button>
                 <Button onClick={handleReset} size="lg" variant="outline">
-                    <RotateCcw className="mr-2 h-5 w-5" /> Reset
+                    <RotateCcw className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Reset
                 </Button>
            </div>
-           <p className="text-sm text-muted-foreground">
+           <p className="text-xs sm:text-sm text-muted-foreground">
                Sessions completed: {Math.floor(sessionsCompleted / 1)} {/* Display only completed work sessions */}
            </p>
         </CardContent>

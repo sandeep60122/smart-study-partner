@@ -28,22 +28,24 @@ export function PomodoroModal({ isOpen, onClose, task }: PomodoroModalProps) {
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="sm:max-w-[90vw] md:max-w-[70vw] lg:max-w-[600px] h-[80vh] flex flex-col p-6">
+      {/* Use size="full" variant from Dialog component and adjust padding/height */}
+      <DialogContent size="full" className="p-4 sm:p-6 flex flex-col h-[90vh] sm:h-[80vh] w-[95vw] sm:w-[90vw] md:w-[70vw] lg:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold mb-2">Pomodoro Session: {task.name}</DialogTitle>
-          <DialogDescription className="text-muted-foreground">
+          <DialogTitle className="text-xl sm:text-2xl font-bold mb-2">Pomodoro Session: {task.name}</DialogTitle>
+          <DialogDescription className="text-sm sm:text-base text-muted-foreground">
             Focus on completing your task with timed work and break intervals.
           </DialogDescription>
         </DialogHeader>
 
+        {/* flex-grow allows this section to take available space */}
         <div className="flex-grow overflow-y-auto space-y-4 mt-4 mb-4 pr-2">
             {/* Task Details */}
-            <div className="space-y-2 p-4 border rounded-lg bg-card shadow-sm">
-                <h3 className="font-semibold text-lg">Task Details</h3>
+            <div className="space-y-2 p-3 sm:p-4 border rounded-lg bg-card shadow-sm">
+                <h3 className="font-semibold text-base sm:text-lg">Task Details</h3>
                 {task.description && (
-                    <p className="text-sm text-muted-foreground">{task.description}</p>
+                    <p className="text-xs sm:text-sm text-muted-foreground">{task.description}</p>
                 )}
-                <div className="flex flex-wrap gap-2 items-center text-sm">
+                <div className="flex flex-wrap gap-1 sm:gap-2 items-center text-xs sm:text-sm">
                     {task.priority && (
                       <Badge variant={getPriorityBadgeVariant(task.priority)}>Priority: {task.priority}</Badge>
                     )}
@@ -57,7 +59,8 @@ export function PomodoroModal({ isOpen, onClose, task }: PomodoroModalProps) {
             </div>
 
             {/* Pomodoro Timer */}
-            <div className="flex flex-col items-center justify-center flex-grow p-4 border rounded-lg bg-card shadow-sm">
+             {/* Added min-h-0 to prevent timer card from overflowing flex container */}
+            <div className="flex flex-col items-center justify-center flex-grow p-2 sm:p-4 border rounded-lg bg-card shadow-sm min-h-0">
                 <PomodoroTimer />
             </div>
         </div>
