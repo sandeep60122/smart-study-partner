@@ -63,105 +63,82 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
 
   const displayUsername = profile?.username || username;
 
-  // Desktop View: The original Card layout
-  const DesktopView = () => (
-    <div>
-      {displayUsername ? (
-        <Card className="w-full sm:max-w-xs">
-          <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <User className="w-4 h-4" />
-              {displayUsername}
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="py-1">
-             {profile && <p className="text-xs text-muted-foreground">Points: {profile.points}</p>}
-          </CardContent>
-          <CardFooter className="pt-2">
-            <Button variant="outline" onClick={handleLogout} className="w-full text-xs px-2 py-1 h-auto">
-              <LogOut className="mr-1 h-3 w-3" /> Logout
+  // Login/Register View (Always Card)
+  const LoginView = () => (
+      <Card className="w-full sm:max-w-xs">
+         <CardHeader>
+           <CardTitle className="text-lg">Login / Register</CardTitle>
+         </CardHeader>
+         <CardContent>
+          <form onSubmit={handleLogin} className="space-y-3">
+            <div className="space-y-1">
+              <Label htmlFor="username-auth-desktop" className="text-xs">Username</Label>
+              <Input
+                id="username-auth-desktop"
+                type="text"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="aspirant123"
+                required
+                className="h-8 text-sm"
+              />
+            </div>
+            <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-2 py-1 h-auto">
+               <LogIn className="mr-1 h-3 w-3" /> Login / Register
             </Button>
-          </CardFooter>
-        </Card>
-      ) : (
-        <Card className="w-full sm:max-w-xs">
-           <CardHeader>
-             <CardTitle className="text-lg">Login</CardTitle>
-           </CardHeader>
-           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-3">
-              <div className="space-y-1">
-                <Label htmlFor="username-auth-desktop" className="text-xs">Username</Label>
-                <Input
-                  id="username-auth-desktop"
-                  type="text"
-                  value={inputValue}
-                  onChange={(e) => setInputValue(e.target.value)}
-                  placeholder="aspirant123"
-                  required
-                  className="h-8 text-sm"
-                />
-              </div>
-              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground text-xs px-2 py-1 h-auto">
-                 <LogIn className="mr-1 h-3 w-3" /> Login / Register
-              </Button>
-            </form>
-          </CardContent>
-          <CardFooter className="mt-2">
-            <p className="text-xs text-muted-foreground text-center w-full leading-tight">
-              No password needed. Data is stored locally.
-            </p>
-          </CardFooter>
-        </Card>
-      )}
-    </div>
+          </form>
+        </CardContent>
+        <CardFooter className="mt-2">
+          <p className="text-xs text-muted-foreground text-center w-full leading-tight">
+            No password needed. Data is stored locally.
+          </p>
+        </CardFooter>
+      </Card>
   );
 
-  // Mobile View: Hamburger menu triggering a Sheet
-  const MobileView = () => (
+  // Logged In Desktop View (Card)
+  const LoggedInDesktopView = () => (
+      <Card className="w-full sm:max-w-xs">
+        <CardHeader className="pb-2">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <User className="w-4 h-4" />
+            {displayUsername}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="py-1">
+           {profile && <p className="text-xs text-muted-foreground">Points: {profile.points}</p>}
+        </CardContent>
+        <CardFooter className="pt-2">
+          <Button variant="outline" onClick={handleLogout} className="w-full text-xs px-2 py-1 h-auto">
+            <LogOut className="mr-1 h-3 w-3" /> Logout
+          </Button>
+        </CardFooter>
+      </Card>
+  );
+
+  // Logged In Mobile View (Sheet)
+  const LoggedInMobileView = () => (
      <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
           <SheetTrigger asChild>
               <Button variant="ghost" size="icon" className="text-foreground">
-                  {displayUsername ? <User className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                   <User className="h-5 w-5" />
                   <span className="sr-only">Open user menu</span>
               </Button>
           </SheetTrigger>
           <SheetContent side="right" className="w-[280px] sm:w-[320px]">
               <SheetHeader>
-                  <SheetTitle>{displayUsername ? `Welcome, ${displayUsername}` : 'Login / Register'}</SheetTitle>
-                  {displayUsername && profile && (
+                  <SheetTitle>Welcome, {displayUsername}</SheetTitle>
+                  {profile && (
                      <SheetDescription>Points: {profile.points}</SheetDescription>
                   )}
               </SheetHeader>
               <div className="py-6">
-                  {displayUsername ? (
-                      <div className="space-y-4">
-                          {/* Add any other mobile profile details/links here if needed */}
-                          <Button variant="outline" onClick={handleLogout} className="w-full">
-                              <LogOut className="mr-2 h-4 w-4" /> Logout
-                          </Button>
-                      </div>
-                  ) : (
-                      <form onSubmit={handleLogin} className="space-y-4">
-                          <div className="space-y-1">
-                              <Label htmlFor="username-auth-mobile">Username</Label>
-                              <Input
-                                  id="username-auth-mobile"
-                                  type="text"
-                                  value={inputValue}
-                                  onChange={(e) => setInputValue(e.target.value)}
-                                  placeholder="aspirant123"
-                                  required
-                              />
-                          </div>
-                          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                              <LogIn className="mr-2 h-4 w-4" /> Login / Register
-                          </Button>
-                          <p className="text-xs text-muted-foreground text-center pt-2">
-                              No password needed. Data is stored locally.
-                          </p>
-                      </form>
-                  )}
+                  <div className="space-y-4">
+                      {/* Add any other mobile profile details/links here if needed */}
+                      <Button variant="outline" onClick={handleLogout} className="w-full">
+                          <LogOut className="mr-2 h-4 w-4" /> Logout
+                      </Button>
+                  </div>
               </div>
                <SheetFooter>
                 {/* Optional footer content */}
@@ -170,5 +147,12 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
       </Sheet>
   );
 
-  return isMobile ? <MobileView /> : <DesktopView />;
+  // Conditional Rendering Logic
+  if (!displayUsername) {
+    // If not logged in, always show the login card
+    return <LoginView />;
+  } else {
+    // If logged in, check if mobile
+    return isMobile ? <LoggedInMobileView /> : <LoggedInDesktopView />;
+  }
 }
