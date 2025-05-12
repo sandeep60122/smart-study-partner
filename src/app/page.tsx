@@ -8,9 +8,9 @@ import { Flashcards } from '@/components/flashcards';
 import { TaskManager } from '@/components/task-manager';
 import { Quiz } from '@/components/quiz';
 import { Explanation } from '@/components/explanation';
-import { IASPrep } from '@/components/ias-prep'; // Import IASPrep component
+import { IASPrep } from '@/components/ias-prep'; // Ensure correct import path
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Layers, ListTodo, HelpCircle, Lightbulb, BookOpen } from 'lucide-react'; // Added BookOpen icon
+import { FileText, Layers, ListTodo, HelpCircle, Lightbulb, BookOpen } from 'lucide-react';
 import { useUserProfile } from '@/contexts/user-profile-context';
 
 export default function Home() {
@@ -47,13 +47,24 @@ export default function Home() {
   const handleSummaryGenerated = useCallback((summary: string) => {
     setCurrentSummary(summary);
     setCurrentSummaryHash(generateSummaryHash(summary));
+    // Optionally switch to explanation or flashcards tab after summary generation
+    // setActiveTab("explanation");
   }, []);
 
   useEffect(() => {
-    if (currentUser && !currentSummary && activeTab === "summarizer") {
-      // If logged in, but no summary, and on summarizer.
+    // Pre-load or initial setup logic if needed based on user or profile
+  }, [currentUser, profile]);
+
+   // When summary changes, make Explanation, Flashcards, Quiz tabs available
+   useEffect(() => {
+    if (currentSummary && (activeTab === 'explanation' || activeTab === 'flashcards' || activeTab === 'quiz')) {
+        // User is on a tab that requires a summary, and one exists. Good.
+    } else if (!currentSummary && (activeTab === 'explanation' || activeTab === 'flashcards' || activeTab === 'quiz')) {
+        // If summary is cleared (e.g., new user logs in), switch away from summary-dependent tabs
+        setActiveTab("summarizer");
     }
-  }, [currentUser, currentSummary, activeTab, profile]);
+   }, [currentSummary, activeTab]);
+
 
   return (
     <div className="min-h-screen bg-background relative">
