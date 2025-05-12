@@ -8,9 +8,9 @@ import { Flashcards } from '@/components/flashcards';
 import { TaskManager } from '@/components/task-manager';
 import { Quiz } from '@/components/quiz';
 import { Explanation } from '@/components/explanation';
-// import { GamificationDashboard } from '@/components/gamification-dashboard'; // Removed Dashboard import
+import { IASPrep } from '@/components/ias-prep'; // Import IASPrep component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Layers, ListTodo, HelpCircle, Lightbulb } from 'lucide-react'; // Removed LayoutDashboard icon
+import { FileText, Layers, ListTodo, HelpCircle, Lightbulb, BookOpen } from 'lucide-react'; // Added BookOpen icon
 import { useUserProfile } from '@/contexts/user-profile-context';
 
 export default function Home() {
@@ -52,7 +52,6 @@ export default function Home() {
   useEffect(() => {
     if (currentUser && !currentSummary && activeTab === "summarizer") {
       // If logged in, but no summary, and on summarizer.
-      // No specific action to take here now that dashboard is removed.
     }
   }, [currentUser, currentSummary, activeTab, profile]);
 
@@ -73,7 +72,7 @@ export default function Home() {
           <main className="w-full max-w-5xl mb-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Responsive grid columns for tabs */}
-              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-3 md:grid-cols-5 lg:grid-cols-5 mb-6">
+              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6 mb-6">
                 <TabsTrigger value="summarizer" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
                    <FileText className="w-4 h-4" /> <span className="truncate">Summarizer</span>
                 </TabsTrigger>
@@ -89,9 +88,10 @@ export default function Home() {
                 <TabsTrigger value="tasks" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
                    <ListTodo className="w-4 h-4" /> <span className="truncate">Tasks</span>
                 </TabsTrigger>
+                <TabsTrigger value="ias-prep" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                   <BookOpen className="w-4 h-4" /> <span className="truncate">IAS Prep</span>
+                </TabsTrigger>
               </TabsList>
-
-              {/* Removed TabsContent for "dashboard" */}
 
               <TabsContent value="summarizer">
                 <Summarizer onSummaryGenerated={handleSummaryGenerated} />
@@ -111,6 +111,10 @@ export default function Home() {
 
               <TabsContent value="tasks">
                 <TaskManager username={currentUser} />
+              </TabsContent>
+
+              <TabsContent value="ias-prep">
+                <IASPrep />
               </TabsContent>
             </Tabs>
           </main>
