@@ -9,8 +9,9 @@ import { TaskManager } from '@/components/task-manager';
 import { Quiz } from '@/components/quiz';
 import { Explanation } from '@/components/explanation';
 import { IASPrep } from '@/components/ias-prep'; // Ensure correct import path
+import { AptitudeSolver } from '@/components/aptitude-solver'; // Import the new Aptitude component
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { FileText, Layers, ListTodo, HelpCircle, Lightbulb, BookOpen } from 'lucide-react';
+import { FileText, Layers, ListTodo, HelpCircle, Lightbulb, BookOpen, Calculator } from 'lucide-react'; // Added Calculator icon
 import { useUserProfile } from '@/contexts/user-profile-context';
 
 export default function Home() {
@@ -83,7 +84,8 @@ export default function Home() {
           <main className="w-full max-w-5xl mb-8">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               {/* Responsive grid columns for tabs */}
-              <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6 mb-6">
+              {/* Increased grid columns to accommodate the new tab */}
+              <TabsList className="grid w-full grid-cols-3 sm:grid-cols-4 md:grid-cols-7 lg:grid-cols-7 mb-6">
                 <TabsTrigger value="summarizer" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
                    <FileText className="w-4 h-4" /> <span className="truncate">Summarizer</span>
                 </TabsTrigger>
@@ -102,6 +104,9 @@ export default function Home() {
                 <TabsTrigger value="ias-prep" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
                    <BookOpen className="w-4 h-4" /> <span className="truncate">IAS Prep</span>
                 </TabsTrigger>
+                 <TabsTrigger value="aptitude" className="flex items-center justify-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                    <Calculator className="w-4 h-4" /> <span className="truncate">Aptitude</span>
+                 </TabsTrigger>
               </TabsList>
 
               <TabsContent value="summarizer">
@@ -127,6 +132,10 @@ export default function Home() {
               <TabsContent value="ias-prep">
                 <IASPrep />
               </TabsContent>
+
+               <TabsContent value="aptitude">
+                 <AptitudeSolver />
+               </TabsContent>
             </Tabs>
           </main>
         ) : (
