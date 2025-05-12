@@ -69,7 +69,8 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-background relative">
-      <div className="absolute top-0 right-0 z-50 p-4 md:p-6">
+      {/* Adjust padding for AuthManager based on screen size */}
+      <div className="absolute top-2 right-2 sm:top-4 sm:right-4 z-50 p-1 sm:p-2">
         <AuthManager onAuthChange={handleAuthChange} />
       </div>
 

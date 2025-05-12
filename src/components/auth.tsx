@@ -7,8 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { User, LogIn, LogOut } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetFooter, SheetDescription } from '@/components/ui/sheet'; // Import Sheet components
+import { User, LogIn, LogOut, Menu } from 'lucide-react';
 import { useUserProfile } from '@/contexts/user-profile-context'; // Import useUserProfile
+import { useIsMobile } from '@/hooks/use-mobile'; // Import useIsMobile hook
 
 interface AuthManagerProps {
   onAuthChange: (username: string | null) => void;
@@ -19,6 +21,9 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
   const [inputValue, setInputValue] = useState('');
   const [isClient, setIsClient] = useState(false);
   const { loadProfile, clearProfile, profile } = useUserProfile(); // Use the context
+  const isMobile = useIsMobile(); // Check if mobile view
+  const [isSheetOpen, setIsSheetOpen] = useState(false); // State for sheet
+
 
   useEffect(() => {
     setIsClient(true);
@@ -42,34 +47,34 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
     if (inputValue.trim()) {
       const newUsername = inputValue.trim();
       setUsername(newUsername);
-      // onAuthChange and loadProfile will be called by the useEffect above
       setInputValue('');
+      setIsSheetOpen(false); // Close sheet after login
     }
   };
 
   const handleLogout = () => {
     setUsername(null);
-    // onAuthChange and clearProfile will be called by the useEffect above
+    setIsSheetOpen(false); // Close sheet after logout
   };
 
   if (!isClient) {
-     return <Card className="w-full max-w-xs"><CardHeader><CardTitle>Loading...</CardTitle></CardHeader></Card>;
+     return <div className="w-8 h-8 bg-muted rounded animate-pulse"></div>; // Simple loading indicator
    }
 
   const displayUsername = profile?.username || username;
 
-  return (
+  // Desktop View: The original Card layout
+  const DesktopView = () => (
     <div>
       {displayUsername ? (
-        // Make card full width on small screens, max-w-xs on larger screens
         <Card className="w-full sm:max-w-xs">
-          <CardHeader>
+          <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-base">
               <User className="w-4 h-4" />
               {displayUsername}
             </CardTitle>
           </CardHeader>
-          <CardContent className="py-0">
+          <CardContent className="py-1">
              {profile && <p className="text-xs text-muted-foreground">Points: {profile.points}</p>}
           </CardContent>
           <CardFooter className="pt-2">
@@ -79,7 +84,6 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
           </CardFooter>
         </Card>
       ) : (
-        // Make card full width on small screens, max-w-xs on larger screens
         <Card className="w-full sm:max-w-xs">
            <CardHeader>
              <CardTitle className="text-lg">Login</CardTitle>
@@ -87,9 +91,9 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
            <CardContent>
             <form onSubmit={handleLogin} className="space-y-3">
               <div className="space-y-1">
-                <Label htmlFor="username-auth" className="text-xs">Username</Label>
+                <Label htmlFor="username-auth-desktop" className="text-xs">Username</Label>
                 <Input
-                  id="username-auth"
+                  id="username-auth-desktop"
                   type="text"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
@@ -112,4 +116,59 @@ export function AuthManager({ onAuthChange }: AuthManagerProps) {
       )}
     </div>
   );
+
+  // Mobile View: Hamburger menu triggering a Sheet
+  const MobileView = () => (
+     <Sheet open={isSheetOpen} onOpenChange={setIsSheetOpen}>
+          <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="text-foreground">
+                  {displayUsername ? <User className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+                  <span className="sr-only">Open user menu</span>
+              </Button>
+          </SheetTrigger>
+          <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+              <SheetHeader>
+                  <SheetTitle>{displayUsername ? `Welcome, ${displayUsername}` : 'Login / Register'}</SheetTitle>
+                  {displayUsername && profile && (
+                     <SheetDescription>Points: {profile.points}</SheetDescription>
+                  )}
+              </SheetHeader>
+              <div className="py-6">
+                  {displayUsername ? (
+                      <div className="space-y-4">
+                          {/* Add any other mobile profile details/links here if needed */}
+                          <Button variant="outline" onClick={handleLogout} className="w-full">
+                              <LogOut className="mr-2 h-4 w-4" /> Logout
+                          </Button>
+                      </div>
+                  ) : (
+                      <form onSubmit={handleLogin} className="space-y-4">
+                          <div className="space-y-1">
+                              <Label htmlFor="username-auth-mobile">Username</Label>
+                              <Input
+                                  id="username-auth-mobile"
+                                  type="text"
+                                  value={inputValue}
+                                  onChange={(e) => setInputValue(e.target.value)}
+                                  placeholder="aspirant123"
+                                  required
+                              />
+                          </div>
+                          <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
+                              <LogIn className="mr-2 h-4 w-4" /> Login / Register
+                          </Button>
+                          <p className="text-xs text-muted-foreground text-center pt-2">
+                              No password needed. Data is stored locally.
+                          </p>
+                      </form>
+                  )}
+              </div>
+               <SheetFooter>
+                {/* Optional footer content */}
+               </SheetFooter>
+          </SheetContent>
+      </Sheet>
+  );
+
+  return isMobile ? <MobileView /> : <DesktopView />;
 }
