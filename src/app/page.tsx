@@ -65,7 +65,7 @@ export default function Home() {
       <div className="flex flex-col items-center w-full px-4 md:px-8">
         <header className="w-full max-w-5xl text-center py-8 md:py-12">
            <h1 className="text-4xl font-bold text-primary mb-2">Smart Study Partner</h1>
-           <p className="text-lg text-foreground/80">Your AI-Powered IAS Exam Preparation Assistant</p>
+           <p className="text-lg text-foreground/80">Your AI-Powered Assistant - Created by Sandeep</p>
         </header>
 
         {currentUser ? (
