@@ -1,12 +1,12 @@
 // src/lib/badge-definitions.ts
-import type { UserProfileData, Task, QuizResult, Badge } from './types';
+import type { UserProfileData, Task, QuizResult, Badge, StudySession } from './types';
 
 export interface BadgeDefinition {
   id: string;
   name: string;
   description: string;
   icon: string; // Lucide icon name
-  criteria: (profile: UserProfileData, context?: any) => boolean;
+  criteria: (profile: UserProfileData, context?: any) => boolean; // context can be { tasks?: Task[], quizResult?: QuizResult, studySessions?: StudySession[], newSession?: StudySession }
   pointsAwarded?: number; // Optional points awarded with the badge
 }
 
@@ -27,7 +27,7 @@ export const badgeDefinitions: Record<string, BadgeDefinition> = {
     description: 'Completed 5 tasks!',
     icon: 'ListChecks',
     criteria: (profile, context?: { tasks: Task[] }) => {
-      return context?.tasks?.filter(t => t.completed).length === 5;
+      return context?.tasks?.filter(t => t.completed).length >= 5; // Changed to >=
     },
     pointsAwarded: 20,
   },
@@ -57,12 +57,37 @@ export const badgeDefinitions: Record<string, BadgeDefinition> = {
     },
     pointsAwarded: 30,
   },
+  FIRST_SESSION_LOGGED: {
+    id: 'first-session-logged',
+    name: 'Focus Starter',
+    description: 'Logged your first study session!',
+    icon: 'PlayCircle',
+    criteria: (profile, context?: { studySessions: StudySession[] }) => {
+      return context?.studySessions?.length === 1;
+    },
+    pointsAwarded: 10,
+  },
+  STUDY_HOUR_ACHIEVED: {
+    id: 'study-hour-achieved',
+    name: 'Hour Hero',
+    description: 'Logged over 1 hour of total study time!',
+    icon: 'Clock',
+    criteria: (profile, context?: { studySessions: StudySession[] }) => {
+      if (!context?.studySessions) return false;
+      const totalDurationSeconds = context.studySessions.reduce((sum, s) => {
+        return sum + (s.endTime - s.startTime) / 1000;
+      }, 0);
+      return totalDurationSeconds >= 3600; // 1 hour = 3600 seconds
+    },
+    pointsAwarded: 20,
+  },
+  // Add more badges here
 };
 
 export function awardBadgeIfCriteriaMet(
   profile: UserProfileData,
   badgeId: keyof typeof badgeDefinitions,
-  context?: any
+  context?: any // context can now be { tasks?: Task[], quizResult?: QuizResult, studySessions?: StudySession[] }
 ): { updatedProfile: UserProfileData; newBadgeAwarded: Badge | null } {
   const definition = badgeDefinitions[badgeId];
   if (!definition) return { updatedProfile: profile, newBadgeAwarded: null };

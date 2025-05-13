@@ -3,86 +3,41 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
-import { Progress } from '@/components/ui/progress';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Play, Pause, RotateCcw, Coffee, Brain } from 'lucide-react';
+import { Play, Pause, RotateCcw, TimerIcon } from 'lucide-react';
 
-type TimerMode = 'Work' | 'ShortBreak' | 'LongBreak';
 type TimerStatus = 'Running' | 'Paused' | 'Idle';
 
-const WORK_DURATION = 25 * 60; // 25 minutes in seconds
-const SHORT_BREAK_DURATION = 5 * 60; // 5 minutes
-const LONG_BREAK_DURATION = 15 * 60; // 15 minutes
-const SESSIONS_BEFORE_LONG_BREAK = 4;
+interface PomodoroTimerProps {
+  onTimeUpdate?: (elapsedTimeInSeconds: number) => void;
+  initialElapsedTime?: number; // To resume from a certain point if needed
+}
 
-export function PomodoroTimer() {
-  const [mode, setMode] = useState<TimerMode>('Work');
+export function PomodoroTimer({ onTimeUpdate, initialElapsedTime = 0 }: PomodoroTimerProps) {
   const [status, setStatus] = useState<TimerStatus>('Idle');
-  const [timeLeft, setTimeLeft] = useState(WORK_DURATION);
-  const [sessionsCompleted, setSessionsCompleted] = useState(0);
+  const [elapsedTime, setElapsedTime] = useState(initialElapsedTime); // in seconds
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-   const audioRef = useRef<HTMLAudioElement | null>(null);
-   const [isClient, setIsClient] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null); // For potential future sounds
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
-     // Preload audio on client mount
-     if (typeof window !== 'undefined') {
-        audioRef.current = new Audio('/sounds/timer-complete.mp3'); // Ensure you have this sound file in public/sounds
-        audioRef.current.preload = 'auto';
-     }
+    // Optional: Preload audio if you plan to add sounds
+    // if (typeof window !== 'undefined') {
+    //    audioRef.current = new Audio('/sounds/timer-tick.mp3'); 
+    //    audioRef.current.preload = 'auto';
+    // }
   }, []);
-
-  const getDuration = useCallback((currentMode: TimerMode): number => {
-    switch (currentMode) {
-      case 'Work':
-        return WORK_DURATION;
-      case 'ShortBreak':
-        return SHORT_BREAK_DURATION;
-      case 'LongBreak':
-        return LONG_BREAK_DURATION;
-      default:
-        return WORK_DURATION;
-    }
-  }, []);
-
-  const switchMode = useCallback(() => {
-    let nextMode: TimerMode;
-    let nextSessionsCompleted = sessionsCompleted;
-
-    if (mode === 'Work') {
-       nextSessionsCompleted += 1;
-      if (nextSessionsCompleted % SESSIONS_BEFORE_LONG_BREAK === 0) {
-        nextMode = 'LongBreak';
-      } else {
-        nextMode = 'ShortBreak';
-      }
-    } else {
-      nextMode = 'Work'; // After any break, go back to Work
-    }
-
-    setMode(nextMode);
-    setSessionsCompleted(nextSessionsCompleted);
-    setTimeLeft(getDuration(nextMode));
-    setStatus('Idle'); // Start next session in Idle state
-
-     // Play sound notification
-     if (audioRef.current) {
-        audioRef.current.play().catch(err => console.error("Audio play failed:", err));
-      }
-
-  }, [mode, sessionsCompleted, getDuration]);
 
   useEffect(() => {
     if (status === 'Running') {
       intervalRef.current = setInterval(() => {
-        setTimeLeft((prevTime) => {
-          if (prevTime <= 1) {
-            clearInterval(intervalRef.current!);
-            switchMode();
-            return 0;
+        setElapsedTime((prevTime) => {
+          const newTime = prevTime + 1;
+          if (onTimeUpdate) {
+            onTimeUpdate(newTime);
           }
-          return prevTime - 1;
+          return newTime;
         });
       }, 1000);
     } else {
@@ -96,13 +51,17 @@ export function PomodoroTimer() {
         clearInterval(intervalRef.current);
       }
     };
-  }, [status, switchMode]);
+  }, [status, onTimeUpdate]);
 
   const handleStartPause = () => {
     if (status === 'Running') {
       setStatus('Paused');
     } else {
       setStatus('Running');
+      // If starting from idle and there's an onTimeUpdate, ensure initial time is reported
+      if (status === 'Idle' && onTimeUpdate) {
+        onTimeUpdate(elapsedTime);
+      }
     }
   };
 
@@ -111,62 +70,44 @@ export function PomodoroTimer() {
       clearInterval(intervalRef.current);
     }
     setStatus('Idle');
-    setTimeLeft(getDuration(mode)); // Reset to current mode's full duration
+    setElapsedTime(0);
+    if (onTimeUpdate) {
+      onTimeUpdate(0);
+    }
+    // Optional: play reset sound
+    // if (audioRef.current) audioRef.current.play().catch(console.error);
   };
-
-   // Ensure time display updates correctly when switching modes while paused/idle
-   useEffect(() => {
-     if (status !== 'Running') {
-       setTimeLeft(getDuration(mode));
-     }
-   }, [mode, status, getDuration]);
 
   const formatTime = (seconds: number): string => {
-    const mins = Math.floor(seconds / 60);
+    const hours = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;
-    return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    
+    let timeString = '';
+    if (hours > 0) {
+        timeString += `${String(hours).padStart(2, '0')}:`;
+    }
+    timeString += `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+    return timeString;
   };
-
-  const progress = ((getDuration(mode) - timeLeft) / getDuration(mode)) * 100;
-
-  const getModeStyles = () => {
-     switch (mode) {
-       case 'Work': return 'border-primary/50 bg-primary/5';
-       case 'ShortBreak': return 'border-green-500/50 bg-green-500/5';
-       case 'LongBreak': return 'border-blue-500/50 bg-blue-500/5';
-       default: return 'border-muted bg-card';
-     }
-   };
-
-   const getModeIcon = () => {
-      switch (mode) {
-          case 'Work': return <Brain className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-primary" />;
-          case 'ShortBreak':
-          case 'LongBreak': return <Coffee className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2 text-green-600" />;
-          default: return null;
-      }
-   }
-
-   if (!isClient) {
-     return <div>Loading Timer...</div>; // Or a skeleton loader
-   }
+  
+  if (!isClient) {
+    return <Card className="w-full max-w-sm sm:max-w-md text-center shadow-lg p-2 sm:p-0"><CardHeader className="p-2 sm:p-6"><CardTitle>Loading Timer...</CardTitle></CardHeader></Card>;
+  }
 
   return (
-     // Adjust padding and max-width for mobile
-     <Card className={`w-full max-w-sm sm:max-w-md text-center shadow-lg ${getModeStyles()} p-2 sm:p-0`}>
-        <CardHeader className="p-2 sm:p-6">
-          <CardTitle className="flex items-center justify-center text-base sm:text-xl font-semibold">
-              {getModeIcon()}
-              Pomodoro: {mode}
+     <Card className={`w-full max-w-xs sm:max-w-sm text-center shadow-lg border-primary/30 bg-card p-2 sm:p-0`}>
+        <CardHeader className="p-3 sm:p-6">
+          <CardTitle className="flex items-center justify-center text-lg sm:text-xl font-semibold">
+              <TimerIcon className="w-5 h-5 sm:w-6 sm:h-6 mr-2 text-primary" />
+              Study Session Timer
           </CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 sm:space-y-6 p-2 sm:p-6 pt-0">
-             {/* Adjust font size for mobile */}
-            <div className="text-5xl sm:text-6xl font-bold font-mono text-foreground tabular-nums">
-               {formatTime(timeLeft)}
+        <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-6 pt-0">
+            <div className="text-4xl sm:text-5xl font-bold font-mono text-foreground tabular-nums">
+               {formatTime(elapsedTime)}
             </div>
-            <Progress value={progress} className="w-full h-2 sm:h-3" />
-            {/* Adjust button size and gap for mobile */}
+            {/* No progress bar for stopwatch */}
             <div className="flex justify-center gap-2 sm:gap-4">
                 <Button onClick={handleStartPause} size="lg" variant={status === 'Running' ? "secondary" : "default"} className="min-w-[90px] sm:min-w-[120px]">
                 {status === 'Running' ? (
@@ -176,12 +117,10 @@ export function PomodoroTimer() {
                 )}
                 </Button>
                 <Button onClick={handleReset} size="lg" variant="outline">
-                    <RotateCcw className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" /> Reset
+                    <RotateCcw className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:h-5" /> Reset
                 </Button>
            </div>
-           <p className="text-xs sm:text-sm text-muted-foreground">
-               Sessions completed: {Math.floor(sessionsCompleted / 1)} {/* Display only completed work sessions */}
-           </p>
+           {/* Session count removed, as it's managed by TaskManager */}
         </CardContent>
       </Card>
   );

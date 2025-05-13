@@ -63,6 +63,11 @@ export interface StudySession {
   taskId: string; // Link to a task
   taskName: string; // Denormalized for easy display
   startTime: number; // Timestamp for start of session
-  endTime: number; // Timestamp for end of session
+  endTime: number; // Timestamp for end of session. Duration is (endTime - startTime)
   notes?: string;
+}
+
+// Interface for potential new badges related to study sessions
+export interface StudySessionBadge extends Badge {
+  // any specific properties for study session badges, if needed
 }

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
-import type { UserProfileData, Badge, Task, QuizResult } from '@/lib/types';
+import type { UserProfileData, Badge, Task, QuizResult, StudySession } from '@/lib/types';
 import useLocalStorage from '@/hooks/use-local-storage';
 import { badgeDefinitions, awardBadgeIfCriteriaMet } from '@/lib/badge-definitions';
 import type { BadgeDefinition } from '@/lib/badge-definitions';
@@ -16,6 +16,7 @@ interface UserProfileContextType {
   addPoints: (amount: number) => void;
   checkAndAwardBadgesForTaskCompletion: (tasks: Task[]) => void;
   checkAndAwardBadgesForQuizCompletion: (quizResult: QuizResult) => void;
+  checkAndAwardBadgesForStudySession: (studySessions: StudySession[]) => void; // New
   updateUserProfile: (updatedProfile: UserProfileData) => void;
 }
 
@@ -31,7 +32,6 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [currentUsername, setCurrentUsername] = useState<string | null>(null);
   const storageKey = currentUsername ? `ias-catalyst-profile-${currentUsername}` : null;
   
-  // This local storage hook will only be active when storageKey is not null
   const [profile, setProfile] = useLocalStorage<UserProfileData>(storageKey || '_disabled_profile', INITIAL_PROFILE_STATE);
   
   const [isLoadingProfile, setIsLoadingProfile] = useState(true);
@@ -40,25 +40,15 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
   const loadProfile = useCallback((username: string) => {
     setIsLoadingProfile(true);
     setCurrentUsername(username);
-    // The useLocalStorage hook will automatically update `profile` when `storageKey` changes.
-    // We need to ensure that if a new user logs in, their data is fetched/initialized.
-    // If it's a new user and no data exists, useLocalStorage will return INITIAL_PROFILE_STATE.
-    // We might need to explicitly set the username in the profile if it's new.
-  }, [setProfile]);
+  }, []);
   
-  // Effect to set username in profile when it's loaded or key changes
   useEffect(() => {
     if (storageKey && profile && profile.username !== currentUsername) {
-      // If profile loaded from storage doesn't match current user (e.g. new user, or key changed)
-      // or if it's the initial state for a new user.
-      if (profile.username === '' && currentUsername) { // INITIAL_PROFILE_STATE case
+      if (profile.username === '' && currentUsername) { 
          setProfile(prev => ({ ...prev, username: currentUsername }));
-      } else if (currentUsername) { // Existing user, ensure username is synced
-         // This case might happen if storageKey changed and `useLocalStorage` picked up old data before updating profile
-         // For a new user, useLocalStorage returns initialValue. If the key is valid (username set),
-         // we set the username on this initial object.
+      } else if (currentUsername) { 
          const storedItem = localStorage.getItem(storageKey);
-         if (!storedItem) { // Truly a new user for this key
+         if (!storedItem) { 
             setProfile({ username: currentUsername, points: 0, badges: [] });
          }
       }
@@ -69,15 +59,15 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
 
   const clearProfile = useCallback(() => {
     setCurrentUsername(null);
-    setProfile(INITIAL_PROFILE_STATE); // Reset to initial state
+    setProfile(INITIAL_PROFILE_STATE); 
     setIsLoadingProfile(true);
   }, [setProfile]);
 
   const addPoints = useCallback((amount: number) => {
-    if (!storageKey) return;
-    setProfile(prev => ({ ...prev, points: prev.points + amount }));
+    if (!storageKey || !profile) return; // Ensure profile is not null
+    setProfile(prev => ({ ...prev!, points: prev!.points + amount }));
     toast({ title: "Points Earned!", description: `You earned ${amount} points.` });
-  }, [setProfile, storageKey, toast]);
+  }, [setProfile, storageKey, toast, profile]);
 
   const updateUserProfile = useCallback((updatedProfile: UserProfileData) => {
     if (!storageKey) return;
@@ -89,60 +79,68 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
     definitionsToConsider: Record<string, BadgeDefinition>,
     context: any
   ): UserProfileData => {
-    if (!storageKey) return profileToCheck;
+    if (!storageKey || !profileToCheck) return profileToCheck;
 
     let updatedProfile = { ...profileToCheck };
     let newBadgeAwardedThisCall = false;
 
     Object.keys(definitionsToConsider).forEach(badgeId => {
-      const result = awardBadgeIfCriteriaMet(updatedProfile, badgeId, context);
+      const result = awardBadgeIfCriteriaMet(updatedProfile, badgeId as keyof typeof badgeDefinitions, context);
       if (result.newBadgeAwarded) {
         updatedProfile = result.updatedProfile;
         toast({
           title: "Badge Unlocked!",
           description: `You earned the "${result.newBadgeAwarded.name}" badge!`,
         });
-        // If badge has points, they are already added by awardBadgeIfCriteriaMet
         newBadgeAwardedThisCall = true;
       }
     });
     
-    // If any badge was awarded, set the profile
     if (newBadgeAwardedThisCall) {
        setProfile(updatedProfile);
     }
-    return updatedProfile; // Return potentially updated profile
+    return updatedProfile;
   }, [setProfile, storageKey, toast]);
 
 
   const checkAndAwardBadgesForTaskCompletion = useCallback((tasks: Task[]) => {
      if (!profile || !storageKey) return;
      const taskBadges = Object.entries(badgeDefinitions)
-       .filter(([_, def]) => def.id.includes('task'))
+       .filter(([_, def]) => def.id.startsWith('task') || def.id.startsWith('streak')) // Include task and streak related
        .reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {} as Record<string, BadgeDefinition>);
      
-     setProfile(currentProfile => checkAndAwardBadges(currentProfile, taskBadges, { tasks }));
+     setProfile(currentProfile => checkAndAwardBadges(currentProfile!, taskBadges, { tasks }));
   }, [profile, storageKey, checkAndAwardBadges, setProfile]);
 
   const checkAndAwardBadgesForQuizCompletion = useCallback((quizResult: QuizResult) => {
     if (!profile || !storageKey) return;
     const quizBadges = Object.entries(badgeDefinitions)
-      .filter(([_, def]) => def.id.includes('quiz'))
+      .filter(([_, def]) => def.id.startsWith('quiz'))
       .reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {} as Record<string, BadgeDefinition>);
       
-    setProfile(currentProfile => checkAndAwardBadges(currentProfile, quizBadges, { quizResult }));
+    setProfile(currentProfile => checkAndAwardBadges(currentProfile!, quizBadges, { quizResult }));
+  }, [profile, storageKey, checkAndAwardBadges, setProfile]);
+
+  const checkAndAwardBadgesForStudySession = useCallback((studySessions: StudySession[]) => {
+    if (!profile || !storageKey) return;
+    const sessionBadges = Object.entries(badgeDefinitions)
+      .filter(([_, def]) => def.id.startsWith('first-session') || def.id.startsWith('study-hour')) // Example prefixes
+      .reduce((obj, [key, val]) => { obj[key] = val; return obj; }, {} as Record<string, BadgeDefinition>);
+    
+    setProfile(currentProfile => checkAndAwardBadges(currentProfile!, sessionBadges, { studySessions }));
   }, [profile, storageKey, checkAndAwardBadges, setProfile]);
 
 
   return (
     <UserProfileContext.Provider value={{ 
-      profile: storageKey ? profile : null, // Only return profile if storageKey is active
+      profile: storageKey && profile ? profile : null, 
       isLoadingProfile, 
       loadProfile, 
       clearProfile, 
       addPoints, 
       checkAndAwardBadgesForTaskCompletion,
       checkAndAwardBadgesForQuizCompletion,
+      checkAndAwardBadgesForStudySession, // Add new function to context
       updateUserProfile
     }}>
       {children}
