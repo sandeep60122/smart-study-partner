@@ -1,7 +1,7 @@
 // src/components/pomodoro-modal.tsx
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react'; // Import useCallback
 import type { Task } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,9 @@ interface PomodoroModalProps {
 export function PomodoroModal({ isOpen, onClose, task, onSessionLogged }: PomodoroModalProps) {
   const [currentElapsedTime, setCurrentElapsedTime] = useState(0);
 
-  const handleTimeUpdate = (timeInSeconds: number) => {
+  const handleTimeUpdate = useCallback((timeInSeconds: number) => {
     setCurrentElapsedTime(timeInSeconds);
-  };
+  }, []); // setCurrentElapsedTime is stable, so empty dependency array is fine.
 
   const handleLogSession = () => {
     onSessionLogged(currentElapsedTime);
