@@ -1,11 +1,11 @@
 // src/components/pomodoro-modal.tsx
 "use client";
 
-import React, { useState, useCallback } from 'react'; // Import useCallback
+import React, { useState, useRef, RefObject } from 'react'; // Import useRef
 import type { Task } from '@/lib/types';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { PomodoroTimer } from '@/components/pomodoro-timer'; 
+import { PomodoroTimer, PomodoroTimerHandles } from '@/components/pomodoro-timer'; // Import PomodoroTimerHandles
 import { Badge } from "@/components/ui/badge";
 import { format } from 'date-fns';
 import { Save, XCircle } from 'lucide-react';
@@ -18,22 +18,21 @@ interface PomodoroModalProps {
 }
 
 export function PomodoroModal({ isOpen, onClose, task, onSessionLogged }: PomodoroModalProps) {
-  const [currentElapsedTime, setCurrentElapsedTime] = useState(0);
-
-  const handleTimeUpdate = useCallback((timeInSeconds: number) => {
-    setCurrentElapsedTime(timeInSeconds);
-  }, []); // setCurrentElapsedTime is stable, so empty dependency array is fine.
+  // Ref to access PomodoroTimer methods/state
+  const timerRef = useRef<PomodoroTimerHandles>(null);
 
   const handleLogSession = () => {
-    onSessionLogged(currentElapsedTime);
+    // Get the elapsed time from the timer component via the ref
+    const elapsedTime = timerRef.current?.getElapsedTime() ?? 0;
+    onSessionLogged(elapsedTime);
     onClose(); // Close modal after logging
   };
 
   const getPriorityBadgeVariant = (priority?: 'Low' | 'Medium' | 'High') => {
     switch (priority) {
       case 'High': return 'destructive';
-      case 'Medium': return 'secondary'; 
-      case 'Low': return 'outline'; 
+      case 'Medium': return 'secondary';
+      case 'Low': return 'outline';
       default: return 'secondary';
     }
   };
@@ -68,7 +67,8 @@ export function PomodoroModal({ isOpen, onClose, task, onSessionLogged }: Pomodo
             </div>
 
             <div className="flex flex-col items-center justify-center flex-grow p-2 sm:p-4 border rounded-lg bg-card shadow-sm min-h-0">
-                <PomodoroTimer onTimeUpdate={handleTimeUpdate} />
+                {/* Pass the ref to PomodoroTimer */}
+                <PomodoroTimer ref={timerRef} />
             </div>
         </div>
 
