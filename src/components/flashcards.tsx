@@ -1,15 +1,15 @@
 // src/components/flashcards.tsx
 "use client";
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { generateFlashcards } from '@/ai/flows/generate-flashcards';
 import type { Flashcard } from '@/lib/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Layers, ArrowLeft, ArrowRight, RotateCw, Check, X, AlertCircle, CalendarClock } from 'lucide-react';
+import { Loader2, Layers, ArrowLeft, ArrowRight, RotateCw, AlertCircle, CalendarClock } from 'lucide-react';
 import useLocalStorage from '@/hooks/use-local-storage';
-import { calculateSrsReview, initializeSrsData } from '@/hooks/use-srs';
+// import { calculateSrsReview, initializeSrsData } from '@/hooks/use-srs'; // SRS calculation might be removed or simplified
 import { useToast } from "@/hooks/use-toast";
 
 interface FlashcardsProps {
@@ -38,27 +38,21 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
   // Load flashcards from storage or generate if summary changes
   useEffect(() => {
     if (storageKey) {
-      // `storedFlashcards` is updated by useLocalStorage when key changes or storage event fires
       setAllFlashcards(storedFlashcards.length > 0 ? storedFlashcards : []);
-      if (storedFlashcards.length === 0 && summary) {
-        // If no cards in storage for this summary, but summary exists, prompt to generate
-        // Or auto-generate? For now, let user click.
-      }
     } else {
       setAllFlashcards([]); // Clear if no valid key
     }
     setCurrentCardIndex(0);
     setIsFlipped(false);
-    setReviewMode(false); // Default to browsing all cards
+    setReviewMode(false);
     setError(null);
   }, [storageKey, summary, storedFlashcards]);
-  // Adding storedFlashcards to dependency array to react to its updates from useLocalStorage
 
   const updateReviewQueue = useCallback(() => {
     const now = Date.now();
     const dueCards = allFlashcards
       .filter(card => card.dueDate <= now)
-      .sort((a, b) => a.dueDate - b.dueDate); // Oldest due first
+      .sort((a, b) => a.dueDate - b.dueDate);
     setReviewQueue(dueCards);
   }, [allFlashcards]);
 
@@ -77,7 +71,7 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
       const result = await generateFlashcards({ summary, summaryHash });
       setAllFlashcards(result.flashcards);
       setStoredFlashcards(result.flashcards); // Save to localStorage
-      setReviewMode(false); // Switch to browse newly generated cards
+      setReviewMode(false);
       setCurrentCardIndex(0);
       setIsFlipped(false);
       toast({ title: "Flashcards Generated!", description: `${result.flashcards.length} cards created.`});
@@ -90,38 +84,9 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
     }
   };
 
-  const handleReviewCard = (quality: 0 | 1 | 2 | 3) => {
-    const currentCards = reviewMode ? reviewQueue : allFlashcards;
-    if (!currentCards[currentCardIndex]) return;
-
-    const cardToReview = currentCards[currentCardIndex];
-    const { updatedCard } = calculateSrsReview(cardToReview, quality);
-
-    // Update this card in the main `allFlashcards` list
-    const updatedAllFlashcards = allFlashcards.map(card =>
-      card.id === updatedCard.id ? updatedCard : card
-    );
-    setAllFlashcards(updatedAllFlashcards);
-    setStoredFlashcards(updatedAllFlashcards); // Persist change
-
-    // If in review mode, automatically go to the next due card or end review
-    if (reviewMode) {
-        // Remove the just-reviewed card from the current (local) reviewQueue and go to next
-        const nextReviewQueue = reviewQueue.filter(c => c.id !== cardToReview.id);
-        setReviewQueue(nextReviewQueue); // This will be further filtered by updateReviewQueue effect if needed
-
-        if (nextReviewQueue.length > 0) {
-            setCurrentCardIndex(0); // Go to the start of the new (shorter) queue
-            setIsFlipped(false);
-        } else {
-            setReviewMode(false); // No more cards in this review session
-            toast({ title: "Review Complete!", description: "All due cards reviewed."});
-        }
-    } else {
-        // If browsing all cards, just update and stay on current (or move if preferred)
-        handleNextCard(); // Or simply re-render current with updated data
-    }
-  };
+  // SRS Grading buttons and handleReviewCard are removed as per request.
+  // The reviewQueue will still populate, but cards won't be actively removed
+  // from it or rescheduled through UI grading actions on this tab.
 
   const activeCardList = reviewMode ? reviewQueue : allFlashcards;
   const currentCard = activeCardList[currentCardIndex];
@@ -151,7 +116,7 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
         setIsFlipped(false);
     } else if (reviewMode) {
         setReviewMode(false);
-        setCurrentCardIndex(0); // Reset to browse all cards
+        setCurrentCardIndex(0);
         setIsFlipped(false);
     } else {
         toast({title: "No Cards Due", description: "You're all caught up!"});
@@ -175,7 +140,7 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
             )}
         </div>
         <CardDescription>
-          {reviewMode ? `Reviewing ${reviewQueue.length} due card(s).` : 'Generate or review flashcards. Due dates use Spaced Repetition.'}
+          {reviewMode ? `Reviewing ${reviewQueue.length} due card(s).` : 'Generate or review flashcards.'}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -189,9 +154,8 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
           <div className="mt-6 space-y-4">
             <div className="text-center text-sm text-muted-foreground mb-2">
               Card {currentCardIndex + 1} of {activeCardList.length}
-              {currentCard.dueDate && <span className="ml-2 block sm:inline">(Due: {new Date(currentCard.dueDate).toLocaleDateString()})</span>}
+              {/* Due date display removed as per request */}
             </div>
-            {/* Adjust height for different screen sizes */}
             <div className="relative h-56 sm:h-64 perspective" onClick={handleFlipCard} style={{cursor: 'pointer'}}>
               <div className={`relative w-full h-full card-flip ${isFlipped ? 'flipped' : ''}`}>
                 <div className="card-front"><p className="text-base sm:text-lg font-semibold">{currentCard.question}</p></div>
@@ -199,28 +163,19 @@ export function Flashcards({ summary, summaryHash, username }: FlashcardsProps) 
               </div>
             </div>
 
-            {isFlipped && ( // Show SRS controls when card is flipped (showing answer)
-              // Stack buttons vertically on small screens
-              <div className="flex flex-col sm:flex-row justify-around items-center gap-2 pt-4">
-                <Button variant="destructive" onClick={() => handleReviewCard(0)} className="w-full sm:w-auto bg-red-600 hover:bg-red-700">
-                  <X className="mr-2 h-4 w-4" /> Incorrect
-                </Button>
-                <Button variant="default" onClick={() => handleReviewCard(2)} className="w-full sm:w-auto bg-green-600 hover:bg-green-700">
-                  <Check className="mr-2 h-4 w-4" /> Correct
-                </Button>
-              </div>
-            )}
+            {/* SRS Grading Buttons Removed */}
 
-            {!isFlipped && activeCardList.length > 1 && ( // Navigation when not flipped
+            {/* Navigation controls remain */}
+            {(activeCardList.length > 1 || isFlipped) && (
                  <div className="flex justify-center items-center gap-4 pt-4">
-                    <Button variant="outline" size="icon" onClick={handlePrevCard} aria-label="Previous card"><ArrowLeft className="h-4 w-4" /></Button>
-                    <Button variant="default" onClick={handleFlipCard} className="px-6"><RotateCw className="mr-2 h-4 w-4" /> Flip Card</Button>
-                    <Button variant="outline" size="icon" onClick={handleNextCard} aria-label="Next card"><ArrowRight className="h-4 w-4" /></Button>
-                 </div>
-            )}
-             {!isFlipped && activeCardList.length === 1 && ( // Just flip button if only one card
-                 <div className="flex justify-center items-center gap-4 pt-4">
-                    <Button variant="default" onClick={handleFlipCard} className="px-6"><RotateCw className="mr-2 h-4 w-4" /> Flip Card</Button>
+                    {activeCardList.length > 1 && !isFlipped && <Button variant="outline" size="icon" onClick={handlePrevCard} aria-label="Previous card"><ArrowLeft className="h-4 w-4" /></Button>}
+                    <Button variant="default" onClick={handleFlipCard} className="px-6"><RotateCw className="mr-2 h-4 w-4" /> {isFlipped ? 'Show Question' : 'Show Answer'}</Button>
+                    {activeCardList.length > 1 && !isFlipped && <Button variant="outline" size="icon" onClick={handleNextCard} aria-label="Next card"><ArrowRight className="h-4 w-4" /></Button>}
+                     {isFlipped && activeCardList.length > 0 && ( // Show next card button when flipped and in review mode, or if browsing all
+                         <Button variant="outline" onClick={handleNextCard} aria-label="Next card">
+                            <ArrowRight className="h-4 w-4 mr-2" /> Next Card
+                         </Button>
+                     )}
                  </div>
             )}
 
